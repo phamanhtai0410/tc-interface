@@ -1,0 +1,151 @@
+replicaCount: 1
+
+image:
+  repository: [FULLREPO_ASIA]
+  pullPolicy: Always
+  containerPort: 80
+  containerPortName: http
+  #   healthCheck:
+  #     livenessProbe:
+  #       httpGet:
+  #         path: /
+  #         port: 80
+  #         scheme: HTTP
+  #       failureThreshold: 3
+  #       initialDelaySeconds: 10
+  #       periodSeconds: 10
+  #       successThreshold: 1
+  #       timeoutSeconds: 3
+  #     readinessProbe:
+  #       httpGet:
+  #         path: /
+  #         port: 80
+  #         scheme: HTTP
+  #       failureThreshold: 3
+  #       initialDelaySeconds: 10
+  #       periodSeconds: 10
+  #       successThreshold: 1
+  #       timeoutSeconds: 3
+  # command: ["gunicorn"]
+  # args:  ["--bind", "0.0.0.0:6004", "--workers=1", "manage:app"]
+
+
+# gunicorn --bind 0.0.0.0:6004 --workers=1 manage:app
+imagePullSecrets:
+  - name: image-pull-secret
+nameOverride: "ht-dapp-testnet"
+fullnameOverride: "ht-dapp-testnet"
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: false
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: "default"
+
+podSecurityContext: {}
+# fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+# runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: true
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "PUT, GET, POST, OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "*"
+    #   nginx.ingress.kubernetes.io/cors-allow-origin: "https://socket.rinz.io"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/limit-rps: "20"
+
+    nginx.ingress.kubernetes.io/from-to-www-redirect: "true"
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      keepalive_timeout 0s;
+
+  hosts:
+
+    - host: tc.esollabs.com
+      paths: ["/"]
+  tls:
+    - secretName: tc-stag-tls-prod
+      hosts:
+        #- [IMAGE_NAME_CI].yeah1group.com
+        - tc.esollabs.com
+
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 400m
+  #   memory: 1000Mi
+  # requests:
+  #   cpu: 50m
+#   memory: 300Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+  # podAntiAffinity:
+  #   requiredDuringSchedulingIgnoredDuringExecution:
+  #   - labelSelector:
+  #       matchExpressions:
+  #       - key: app.kubernetes.io/name
+  #         operator: In
+  #         values:
+  #         - onelive-website-dev
+#     topologyKey: "kubernetes.io/hostname"
+
+extraInitContainers:
+  - command:
+      - sh
+      - -c
+      - sysctl -e -w net.core.somaxconn=32768; sysctl -e -w net.ipv4.ip_local_port_range="1025 65535"; sysctl -e -w net.core.netdev_max_backlog=32768; sysctl -e -w net.ipv4.tcp_max_syn_backlog=32768;
+    image: alpine:3.6
+    imagePullPolicy: IfNotPresent
+    name: sysctl
+    resources: {}
+    securityContext:
+      privileged: true
+deployment:
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "180"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "180"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "180"
+    reloader.stakater.com/auto: "true"
+configmap: {}
+externalSecret:
+  enabled: false
+  secretStoreName: cluster-secretstore-stag
+  refreshInterval: 1m
+  secretManagerName: stag-test
+secret:
+  enabled: false
+  keyValues:
+    test: "test"
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 70
