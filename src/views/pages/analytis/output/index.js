@@ -1,24 +1,25 @@
 import { AdaptableCard } from 'components/shared'
 import { useEffect, useState } from 'react'
 import AnalyticTable from '../components/AnalyticTable'
-import { fetchDetailAnalytic, fetchListAnalytic } from 'actions/analytic.actions'
+import { fetchDetailAnalytic, fetchListAnalytic, fetchResultAnalytic } from 'actions/analytic.actions'
 import { useDispatch, useSelector } from 'react-redux'
 import { selectListAnalytic } from 'store/analytics/analyticSlice'
-import { Pagination } from 'components/ui'
+import { Pagination, Spinner } from 'components/ui'
 import { useNavigate, useParams } from 'react-router-dom'
-import { setTabId } from 'store/analytics/analyticDetailSlice'
+import { selectDetailAnalytic, setTabId } from 'store/analytics/analyticDetailSlice'
 import { idea } from 'react-syntax-highlighter/dist/esm/styles/hljs'
 
 const AnalytisData = () => {
   const dispatch = useDispatch();
   const [callCount, setCallCount] = useState(0)
-
+  const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
   const [stateLoading, setStateLoading] = useState(false)
-  const data = useSelector(selectListAnalytic);
+  // const data = useSelector(selectListAnalytic);
+  const data = useSelector(selectDetailAnalytic);
+
 
   const checkResult = () => {
-    console.log(data?.items.every(item => item.status === "DONE"))
     return data?.items.every(item => item.status === "DONE")
   }
 
@@ -27,32 +28,7 @@ const AnalytisData = () => {
     await dispatch(fetchListAnalytic());
   };
 
-  const max_count = 50;
-  useEffect(() => {
-    const interval = setInterval(() => {
-      // Gọi API ở đây
-      if (callCount > 0) {
-        fetchAnalytics()
-        checkResult()
-        setCallCount(prevCount => prevCount + 1);
-      }
-      if (checkResult()) {
-        clearInterval(interval);
-      }
-    }, 20000);
-    return () => {
-      clearInterval(interval);
-    };
-  }, [callCount]);
 
-
-
-  useEffect(() => {
-    if (callCount === 0) {
-      fetchAnalytics()
-      setCallCount(prevCount => prevCount + 1);
-    }
-  },[])
 
 
   const handleDetailAnalytic = async (_id) => {
@@ -66,9 +42,6 @@ const AnalytisData = () => {
     } catch (e) {
       console.log("errr:", e)
     }
-
-
-
   }
 
 
@@ -81,18 +54,42 @@ const AnalytisData = () => {
     // } 
   }, [])
 
+  
+
+
+  const fetchDetailAnalytics = async () => {
+    setLoading(true)
+    const response = await dispatch(fetchResultAnalytic({ from_time: '1672531200', page: 1, page_size: 5000 }));
+    if (response.payload && response.payload.items.length > 0) {
+      setLoading(false)
+      // if ((date) === 0) {
+      //     setDataAnalyst(response.payload.items)
+      // }
+      // else{
+      //     // const dataFilterDay = response.payload.items.filter(userSameDay)
+      //     // setDataAnalyst(dataFilterDay)
+      //     setDataTemp(response.payload.items)
+      //     const dataFilterDay = response.payload.items.filter(userSameDay)
+      //     setDataAnalyst(dataFilterDay)
+      // }
+    }
+  };
+  useEffect(() => {
+    fetchDetailAnalytics()
+  }, []);
+
 
   return (
-    <AdaptableCard className="h-full" bodyClass="h-full">
+    <div className="h-full p-0 bg-[#fff]">
       {/* <div className="lg:flex items-center justify-end mb-4">
                  table tool 
             </div> */}
-      {data.items.length > 0 && <AnalyticTable data={data.items} handleDetailAnalytic={handleDetailAnalytic} />}
+      {(data.items.length > 0 && !loading) ? <AnalyticTable fetchDetailAnalytic={fetchDetailAnalytic} data={data.items} handleDetailAnalytic={handleDetailAnalytic} /> : <Spinner className="mx-auto"/>}
 
       {/* <div className='mt-[32px] flex justify-center'>
               <Pagination currentPage={data.page} total={data.num_of_page} setQuerySize={setQuerySize}/>
             </div> */}
-    </AdaptableCard>
+    </div>
   )
 }
 

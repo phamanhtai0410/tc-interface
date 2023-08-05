@@ -61,6 +61,7 @@ const convertIcon = (key) => {
             />
         )
     }
+    //pages.output
     if (key === 'pages.follower_watch') {
         return (
             <img
@@ -69,11 +70,27 @@ const convertIcon = (key) => {
             />
         )
     }
+    if (key === 'pages.analytis.output') {
+        return (
+            <img
+                src="/img/dashboard/logo_analytics.svg"
+                alt="logo_global"
+            />
+        )
+    }
+    if (key === 'pages.analytis.input') {
+        return (
+            <img
+                src="/img/dashboard/logo_input.svg"
+                alt="logo_input"
+            />
+        )
+    }
 }
 
 const DefaultItem = (props) => {
     const { nav, onLinkClick, sideCollapsed, userAuthority } = props
-
+    
     return (
         <AuthorityCheck userAuthority={userAuthority} authority={nav.authority}>
             <MenuItem key={nav.key} eventKey={nav.key} className="mb-2">

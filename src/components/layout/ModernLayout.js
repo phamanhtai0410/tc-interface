@@ -104,8 +104,7 @@ const ModernLayout = (props) => {
         const { name, username, password, role } = values
         setSubmitting(true)
         const result = await fetchCreateUser({ name, username, password, role })
-
-        console.log("--result", result)
+        console.log(result)
 
         if (result.status === 'failed') {
             setMessage(result.message)
@@ -113,7 +112,6 @@ const ModernLayout = (props) => {
             setMessage([])
             setIsOpen(false)
             dispatch(getListUsersAction({page:1, page_size:15}))
-            
             navigate('/pages/user-management')
             toast.push(
                 <Notification
@@ -161,11 +159,11 @@ const ModernLayout = (props) => {
                             {message && message.length > 0 && (
                                 <Alert classNa me="mb-4" type="danger" showIcon>
                                     
-                                    {message?.map((mess) => {
+                                    { Array.isArray(message) ? message?.map((mess) => {
                                         return <>
                                             - {mess} <br/>
                                         </>
-                                    })}
+                                    }) : message}
                                 </Alert>
                             )}
                             <Formik

@@ -10,6 +10,7 @@ import analytic_detail from './analytics/analyticDetailSlice'
 import follower from './follower/followerSlice'
 import role from './role/roleSlice'
 import followerWatch from './followerWatch/followerWatchSlice'
+import excluded from './excluded/excludeSlice'
 const rootReducer = (asyncReducers) => (state, action) => {
     const combinedReducer = combineReducers({
         theme,
@@ -23,6 +24,7 @@ const rootReducer = (asyncReducers) => (state, action) => {
         follower,
         role,
         followerWatch,
+        excluded,
         ...asyncReducers,
     })
     return combinedReducer(state, action)

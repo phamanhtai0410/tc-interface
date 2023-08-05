@@ -7,8 +7,10 @@ import { HiOutlineEyeOff, HiOutlineEye } from 'react-icons/hi'
 import { useDispatch } from 'react-redux'
 import { updateUserPassword } from 'actions/user.actions'
 import { passwordSchema } from 'utils/schema/schema'
+import { idea } from 'react-syntax-highlighter/dist/esm/styles/hljs'
 
-const FormChangePwd = ({id}) => {
+const FormChangePwd = ({ id }) => {
+    
     const [pwInputType, setPwInputType] = useState('password')
     const dispatch = useDispatch()
     const onPasswordVisibleClick = (e) => {

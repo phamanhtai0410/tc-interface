@@ -194,6 +194,7 @@ const DataTable = forwardRef((props, ref) => {
                                     <Th
                                         key={header.id}
                                         colSpan={header.colSpan}
+                                        className="bg-[#fff]"
                                     >
                                         {header.isPlaceholder ? null : (
                                             <div
@@ -233,10 +234,10 @@ const DataTable = forwardRef((props, ref) => {
                             .rows.slice(0, pageSize)
                             .map((row) => {
                                 return (
-                                    <Tr key={row.id}>
+                                    <Tr key={row.id} className="relative">
                                         {row.getVisibleCells().map((cell) => {
                                             return (
-                                                <Td key={cell.id} className="text-[#0A203D] w-fit">
+                                                <Td key={cell.id} className="text-[#0A203D] w-fit ">
                                                     {flexRender(
                                                         cell.column.columnDef.cell,
                                                         cell.getContext()

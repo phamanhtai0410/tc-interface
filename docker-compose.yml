@@ -1,0 +1,20 @@
+version: "3"
+services:
+
+  dwf-twitter-interfaces:
+    image: dwf-twitter-interfaces
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    restart: always
+    volumes:
+      - ./:/webapps
+    ports:
+      - 6666:3000
+    networks:
+      - base-network
+
+networks:
+  base-network:
+    external: true

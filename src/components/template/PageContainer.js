@@ -24,11 +24,11 @@ const PageContainer = (props) => {
     } = props
 
     return (
-        <div className="h-full flex flex-auto flex-col justify-between bg-none">
+        <div className="flex flex-auto flex-col justify-between bg-none">
             <main className="h-full">
                 <div
                     className={classNames(
-                        'page-container relative h-full flex flex-auto flex-col',
+                        'page-container relative flex flex-auto flex-col',
                         pageContainerType !== 'gutterless' &&
                             `${PAGE_CONTAINER_GUTTER_X} ${PAGE_CONTAINER_GUTTER_Y}`,
                         pageContainerType === 'contained' && 'container mx-auto'

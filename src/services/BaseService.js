@@ -10,7 +10,7 @@ const unauthorizedCode = [401]
 
 const BaseService = axios.create({
     timeout: 60000,
-    baseURL: appConfig.apiPrefix,
+    baseURL: process.env.REACT_APP_API_ENDPOINT,
 })
 
 BaseService.interceptors.request.use(

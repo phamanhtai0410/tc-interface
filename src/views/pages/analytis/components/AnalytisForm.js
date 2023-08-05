@@ -4,68 +4,71 @@ import { Input, Button, FormItem, FormContainer, Select, DatePicker, Alert, toas
 import AnalytisSegment from './AnalytisSegment'
 import { getListVerticalGroup } from 'actions/vertical.actions'
 import * as Yup from 'yup'
-import { useDispatch } from 'react-redux'
-import { runAnalytics, runAnalyticsVerticalAction } from 'actions/analytic.actions'
+import { useDispatch, useSelector } from 'react-redux'
+import { fetchGetAnalyticsVertical, runAnalytics, runAnalyticsVerticalAction } from 'actions/analytic.actions'
 import useTimeOutMessage from 'utils/hooks/useTimeOutMessage'
 import { useNavigate } from 'react-router-dom'
-import { fetchGlobalAnalytic } from 'actions/global.actions'
 import { getListFollowerGroup } from 'actions/follower.actions'
+import { selectExcluded } from 'store/excluded/excludeSlice'
+import InputKeywords from './InputKeywords'
+
 
 
 const dateFormat = 'DD-MM-YYYY'
 
 
 const validationSchema = Yup.object().shape({
-    vertical_name: Yup.string().required('Please enter vertical name'),
+    vertical_name: Yup.string().required('Please enter name'),
     vertical_keyword_groups: Yup.string().required('Please select one!'),
     follower_group_id: Yup.string().required('Please select one!'),
-    vertical_keyword_groups_weight: Yup.string().required('Please enter Vertical Keyword Group Weight'),
-    follower_group_weight: Yup.string().required('Please enter Follower Group Weight'),
+    vertical_keyword_groups_weight: Yup.string().required('Please enter Keyword Group Weight'),
+    // follower_group_weight: Yup.string().required('Please enter Follower Group Weight'),
+    follower_quality_weight: Yup.string().required('Please enter Follower Quality Weight'),
 
-    recency_weight: Yup.string().required('Please enter Recency weight'),
-    engagement_weight: Yup.string().required('Please enter Engagement weight'),
-    account_verified_weight: Yup.string().required('Please enter Account verified weight'),
-    end_date: Yup.string().required('Please enter End Date'),
 
-    account_no_verified_point: Yup.string().required('Please enter Account no verified weight'),
-    account_verified_point: Yup.string().required('Please enter Account verified point'),
-    account_business_point: Yup.string().required('Please enter Account business point'),
+    recency_weight: Yup.number().min(0, "Must be positive number").required('Please enter Recency weight'),
+    // engagement_weight: Yup.string().required('Please enter Engagement weight'),
+    account_verified_weight: Yup.number().min(0, "Must be positive number").required('Please enter Account verified weight'),
+    // end_date: Yup.string().required('Please enter End Date'),
 
-    followers_count_end: Yup.number().when("followers_count_start", {
-        is: (followers_count_start) => followers_count_start != undefined,
-        then: Yup.number().required('I am required now the followers_count')
-    }).when("$followers_count_start", followers_count_start => {
-        return followers_count_start &&
-            Yup.number().min(followers_count_start)
-    }),
+    account_no_verified_point: Yup.number().min(0, "Must be positive number").max(100,"Must be less than or equal 100").required('Please enter Account no verified weight'),
+    account_verified_point: Yup.number().min(0, "Must be positive number").max(100,"Must be less than or equal 100").required('Please enter Account verified point'),
+    account_business_point: Yup.number().min(0, "Must be positive number").max(100,"Must be less than or equal 100").required('Please enter Account business point'),
+
+    // followers_count_end: Yup.number().when("followers_count_start", {
+    //     is: (followers_count_start) => followers_count_start != undefined,
+    //     then: Yup.number().required('I am required now the followers_count')
+    // }).when("$followers_count_start", followers_count_start => {
+    //     return followers_count_start &&
+    //         Yup.number().min(followers_count_start)
+    // }),
 
 
     // tweet_date_start: Yup.string().ensure().when('tweet_date_end', {
     //     is: (tweet_date_end) => tweet_date_end,
     //     then: Yup.string().required('Please enter Start date')
     // }),
-    tweet_date_start: Yup.date()
-        // .required("Please enter  Tweet Date start")
-        .nullable().default(undefined),
-    tweet_date_end: Yup.date()
-        // .required('Please enter Tweet Date end')
-        .nullable().default(undefined),
+    // tweet_date_start: Yup.date()
+    //     .required("Please enter  Tweet Date start")
+    //     .nullable().default(undefined),
+    // tweet_date_end: Yup.date()
+    //      .required('Please enter Tweet Date end')
+    //     .nullable().default(undefined),
 
     // account_age_range_start: Yup.date().ensure().when('account_age_range_end', {
     //     is: (account_age_range_end) => account_age_range_end,
     //     then: Yup.date().required('Please enter Start date')
     // }),
 
-    account_age_range_start: Yup.date().nullable().default(undefined),
-    account_age_range_end: Yup.date()
-        // .min('Account Age Range end must be greater than or equal to Account Age Range start')
-        // .required('Please enter Account Age Range end')
-        .nullable().default(undefined),
+    // account_age_range_start: Yup.date().nullable().default(undefined),
+    // account_age_range_end: Yup.date()
+    //      .min('Account Age Range end must be greater than or equal to Account Age Range start')
+    //      .required('Please enter Account Age Range end')
+    //     .nullable().default(undefined),
 })
 
-const AnalytisForm = () => {
+const AnalytisForm = ({ autoConvert, globalData,tags,setTags }) => {
     const navigate = useNavigate()
-
     const [stateLoading, setStateLoading] = useState(false)
     const [expand, setExpand] = useState(false)
 
@@ -114,6 +117,8 @@ const AnalytisForm = () => {
     const [numPage, setNumPage] = useState();
     const [verticalKeyword, setVerticalKeyword] = useState([])
 
+
+    // fetchVerticalData
     const fetchVerticalData = async () => {
         const response = await dispatch(getListVerticalGroup(querySize))
 
@@ -158,6 +163,7 @@ const AnalytisForm = () => {
 
     const [loading, setIsLoading] = useState(false);
 
+    //react-select
     const handleScrolltoBottom = () => {
         setIsLoading(true)
         if (querySize.page <= numPage) {
@@ -176,6 +182,7 @@ const AnalytisForm = () => {
     const [followerGroupData, setFollowerGroupData] = useState([]);
     const [numFollowerPage, setNumFollowerPage] = useState();
 
+    // Fetch FollowerGroupData
     const fetchFollowerGroupData = async () => {
         const response = await dispatch(getListFollowerGroup(queryFollowerSize))
 
@@ -213,236 +220,233 @@ const AnalytisForm = () => {
 
 
     // set default global data
-    const [globalData, setGlobalData] = useState({})
-
-    const fetchGlobalData = async () => {
-        const response = await dispatch(fetchGlobalAnalytic())
-        setGlobalData(response.payload.data)
-    }
-
-    useEffect(() => {
-        fetchGlobalData()
-    }, [])
-
+    
 
 
     const onRun = async (values, setSubmitting) => {
 
-        if (values.vertical_keyword_groups_weight + values.recency_weight + values.engagement_weight + values.follower_quality_weight + values.account_verified_weight != 100) {
+        if ((values.vertical_keyword_groups_weight) + (values.recency_weight) + (values.follower_quality_weight) + (values.account_verified_weight) !== (100)) {
             setSubmitting(true)
             setMessage('Total of weight must be equal 100')
             setSubmitting(false)
         } else {
-
             const dataReq = {
-                vertical_name: values.vertical_name,
+                vertical_name: "analytics_default",
                 vertical_keyword_groups: arr_id_vertical_keyword(values.vertical_keyword_groups),
                 follower_group_id: values.follower_group_id,
                 note: values.note,
-
-
+                follower_quality_weight: values.follower_quality_weight,
                 end_date: formatDate(values.end_date),
                 recency_weight: values.recency_weight,
                 engagement_weight: values.engagement_weight,
                 account_verified_weight: values.account_verified_weight,
-
+                auto: autoConvert,
                 follower_quality_weight: values.follower_quality_weight,
-                vertical_keyword_groups_weight: values.vertical_keyword_groups_weight
-            }
-
-            if (values.followers_count_start) {
-                dataReq['followers_count'] = {
-                    start: values.followers_count_start,
-                    end: values.followers_count_end
-                }
-            } else {
-                dataReq['followers_count'] = null
-            }
-
-            if (values.following_count_start) {
-                dataReq['following_count'] = {
-                    start: values.following_count_start,
-                    end: values.following_count_end
-                }
-            } else {
-                dataReq['following_count'] = null
-            }
-
-            if (values.tweet_count_start) {
-                dataReq['tweet_count'] = {
-                    start: values.tweet_count_start,
-                    end: values.tweet_count_end
-                }
-            } else {
-                dataReq['tweet_count'] = null
-            }
-
-
-            if (values.listed_count_start) {
-                dataReq['listed_count'] = {
-                    start: values.listed_count_start,
-                    end: values.listed_count_end
-                }
-            } else {
-                dataReq['listed_count'] = null
-            }
-
-            if (values.retweet_count_start) {
-                dataReq['retweet_count'] = {
-                    start: values.retweet_count_start,
-                    end: values.retweet_count_end
-                }
-            } else {
-                dataReq['retweet_count'] = null
-            }
-
-            if (values.reply_count_start) {
-                dataReq['reply_count'] = {
-                    start: values.reply_count_start,
-                    end: values.reply_count_end
-                }
-            } else {
-                dataReq['reply_count'] = null
-            }
-
-            if (values.like_count_start) {
-                dataReq['like_count'] = {
-                    start: values.like_count_start,
-                    end: values.like_count_end
-                }
-            } else {
-                dataReq['like_count'] = null
-            }
-
-            if (values.quote_count_start) {
-                dataReq['quote_count'] = {
-                    start: values.quote_count_start,
-                    end: values.quote_count_end
-                }
-            } else {
-                dataReq['quote_count'] = null
-            }
-
-            if (values.impression_count_start) {
-                dataReq['impression_count'] = {
-                    start: values.impression_count_start,
-                    end: values.impression_count_end
-                }
-            } else {
-                dataReq['impression_count'] = null
-            }
-
-            if (values.account_age_range_end) {
-                dataReq['account_age_range'] = {
-                    start: formatDate(values.account_age_range_start).toString(),
-                    end: formatDate(values.account_age_range_end).toString()
-                }
-            } else {
-                dataReq['account_age_range'] = null
-            }
-
-            if (values.tweet_date_end) {
-                dataReq['tweet_date'] = {
-                    start: formatDate(values.tweet_date_start).toString(),
-                    end: formatDate(values.tweet_date_end).toString()
-                }
-            } else {
-                dataReq['tweet_date'] = null
-            }
-
-            if (values.hashtags) {
-                dataReq['hashtags'] = convert_array(values.hashtags)
-            } else {
-                dataReq['hashtags'] = null
-            }
-
-            if (values.mentions) {
-                dataReq['mentions'] = convert_array(values.mentions)
-            } else {
-                dataReq['mentions'] = null
-            }
-
-            if (values.cashtags) {
-                dataReq['cashtags'] = convert_array(values.cashtags)
-            } else {
-                dataReq['cashtags'] = null
-            }
-
-            if (values.annotations) {
-                dataReq['annotations'] = convert_array(values.annotations)
-            } else {
-                dataReq['annotations'] = null
-            }
-
-            if (values.exclude_account) {
-                dataReq['exclude_account'] = convert_array(values.exclude_account)
-            } else {
-                dataReq['exclude_account'] = null
-            }
-
-
-            if (values.account_no_verified_point) {
-                dataReq['account_no_verified_point'] = values.account_no_verified_point
-            } else {
-                dataReq['account_no_verified_point'] = null
-            }
-
-            if (values.account_verified_point) {
-                dataReq['account_verified_point'] = values.account_verified_point
-            } else {
-                dataReq['account_verified_point'] = null
-            }
-
-            if (values.account_business_point) {
-                dataReq['account_business_point'] = values.account_business_point
-            } else {
-                dataReq['account_business_point'] = null
+                vertical_keyword_groups_weight: values.vertical_keyword_groups_weight,
+                account_no_verified_point: values.account_no_verified_point,
+                account_verified_point: values.account_verified_point,
+                account_business_point: values.account_business_point,
+                exclude_account: values.exclude_account.toString().split(',')
             }
 
             setSubmitting(true)
+            
+            
 
             const result = await runAnalytics(dataReq)
+
 
             if (result.status === 'failed') {
                 setMessage(result.message)
             } else {
                 setStateLoading(true)
-                const response = await dispatch(runAnalyticsVerticalAction(result))
-                if (response.meta.requestStatus === 'fulfilled') {
-                    setStateLoading(false)
-                }
-
+                // const response = await dispatch(runAnalyticsVerticalAction(result))
+                // if (response.meta.requestStatus === 'fulfilled') {
+                //     setStateLoading(false)
+                // }
                 navigate('/pages/analytics/output')
                 toast.push(
                     <Notification
-                        title={'Successfuly save'}
+                        title={'Successfully save'}
                         type="success"
                         duration={2500}
                     >
-                        Successfuly run
+                        Successfully run
                     </Notification>,
                     {
                         placement: 'top-center',
                     }
 
                 )
+                setSubmitting(false)
             }
 
-            setSubmitting(false)
+
+
+            // if (values.followers_count_start) {
+            //     dataReq['followers_count'] = {
+            //         start: values.followers_count_start,
+            //         end: values.followers_count_end
+            //     }
+            // } else {
+            //     dataReq['followers_count'] = null
+            // }
+
+            // if (values.following_count_start) {
+            //     dataReq['following_count'] = {
+            //         start: values.following_count_start,
+            //         end: values.following_count_end
+            //     }
+            // } else {
+            //     dataReq['following_count'] = null
+            // }
+
+            // if (values.tweet_count_start) {
+            //     dataReq['tweet_count'] = {
+            //         start: values.tweet_count_start,
+            //         end: values.tweet_count_end
+            //     }
+            // } else {
+            //     dataReq['tweet_count'] = null
+            // }
+
+
+            // if (values.listed_count_start) {
+            //     dataReq['listed_count'] = {
+            //         start: values.listed_count_start,
+            //         end: values.listed_count_end
+            //     }
+            // } else {
+            //     dataReq['listed_count'] = null
+            // }
+
+            // if (values.retweet_count_start) {
+            //     dataReq['retweet_count'] = {
+            //         start: values.retweet_count_start,
+            //         end: values.retweet_count_end
+            //     }
+            // } else {
+            //     dataReq['retweet_count'] = null
+            // }
+
+            // if (values.reply_count_start) {
+            //     dataReq['reply_count'] = {
+            //         start: values.reply_count_start,
+            //         end: values.reply_count_end
+            //     }
+            // } else {
+            //     dataReq['reply_count'] = null
+            // }
+
+            // if (values.like_count_start) {
+            //     dataReq['like_count'] = {
+            //         start: values.like_count_start,
+            //         end: values.like_count_end
+            //     }
+            // } else {
+            //     dataReq['like_count'] = null
+            // }
+
+            // if (values.quote_count_start) {
+            //     dataReq['quote_count'] = {
+            //         start: values.quote_count_start,
+            //         end: values.quote_count_end
+            //     }
+            // } else {
+            //     dataReq['quote_count'] = null
+            // }
+
+            // if (values.impression_count_start) {
+            //     dataReq['impression_count'] = {
+            //         start: values.impression_count_start,
+            //         end: values.impression_count_end
+            //     }
+            // } else {
+            //     dataReq['impression_count'] = null
+            // }
+
+            // if (values.account_age_range_end) {
+            //     dataReq['account_age_range'] = {
+            //         start: formatDate(values.account_age_range_start).toString(),
+            //         end: formatDate(values.account_age_range_end).toString()
+            //     }
+            // } else {
+            //     dataReq['account_age_range'] = null
+            // }
+
+            // if (values.tweet_date_end) {
+            //     dataReq['tweet_date'] = {
+            //         start: formatDate(values.tweet_date_start).toString(),
+            //         end: formatDate(values.tweet_date_end).toString()
+            //     }
+            // } else {
+            //     dataReq['tweet_date'] = null
+            // }
+
+            // if (values.hashtags) {
+            //     dataReq['hashtags'] = convert_array(values.hashtags)
+            // } else {
+            //     dataReq['hashtags'] = null
+            // }
+
+            // if (values.mentions) {
+            //     dataReq['mentions'] = convert_array(values.mentions)
+            // } else {
+            //     dataReq['mentions'] = null
+            // }
+
+            // if (values.cashtags) {
+            //     dataReq['cashtags'] = convert_array(values.cashtags)
+            // } else {
+            //     dataReq['cashtags'] = null
+            // }
+
+            // if (values.annotations) {
+            //     dataReq['annotations'] = convert_array(values.annotations)
+            // } else {
+            //     dataReq['annotations'] = null
+            // }
+
+            // if (values.exclude_account) {
+            //     dataReq['exclude_account'] = convert_array(values.exclude_account)
+            // } else {
+            //     dataReq['exclude_account'] = null
+            // }
+
+
+            // if (values.account_no_verified_point) {
+            //     dataReq['account_no_verified_point'] = values.account_no_verified_point
+            // } else {
+            //     dataReq['account_no_verified_point'] = null
+            // }
+
+            // if (values.account_verified_point) {
+            //     dataReq['account_verified_point'] = values.account_verified_point
+            // } else {
+            //     dataReq['account_verified_point'] = null
+            // }
+
+            // if (values.account_business_point) {
+            //     dataReq['account_business_point'] = values.account_business_point
+            // } else {
+            //     dataReq['account_business_point'] = null
+            // }
+
+
         }
     }
 
-    const [showParameter, setShowParameter] = useState(false);
+    const [showParameter, setShowParameter] = useState(true);
     const handleChangeShowParameter = () => {
         setShowParameter(!showParameter)
     }
 
-    const [showPublicMetric, setShowPublicMetric] = useState(false);
+    const [showPublicMetric, setShowPublicMetric] = useState(true);
     const handlerChangeShowPublicMetrics = () => {
         setShowPublicMetric(!showPublicMetric)
     }
 
-    const [showTweetParameter, setShowTweetParameter] = useState(false)
+    const [showTweetParameter, setShowTweetParameter] = useState(true)
     const handlerShowTweetParameter = () => {
         setShowTweetParameter(!showTweetParameter)
     }
@@ -462,41 +466,50 @@ const AnalytisForm = () => {
         return true;
     }
 
+    //get excluded depend on the changes of list favorite account
+    const listExcluded = useSelector(selectExcluded)
 
+    const onKeyDown = (keyEvent)=>{
+        if ((keyEvent.charCode || keyEvent.keyCode) === 13) {
+            keyEvent.preventDefault();
+        }
+    }
     return (
         <div >
             <Formik
                 enableReinitialize
                 initialValues={{
-                    vertical_name: '',
-                    note: '',
-                    vertical_keyword_groups: '',
-                    vertical_keyword_groups_weight: '',
+                    vertical_name: '' || globalData?.vertical_name,
+                    note: '' || globalData?.note,
+                    vertical_keyword_groups: '' || globalData?.vertical_keyword_groups?.[0],
+                    vertical_keyword_groups_weight: '' || globalData?.vertical_keyword_groups_weight,
 
-                    follower_group_id: '',
-                    follower_group_weight: '',
+                    follower_group_id: '' || globalData?.follower_group_id,
+                    // follower_group_weight: '',
+                    follower_quality_weight: '' || globalData?.follower_quality_weight,
 
-                    end_date: '',
-                    engagement_weight: '',
-                    recency_weight: '',
-                    account_verified_weight: '',
-                    
+                    end_date: '' || revertDate(globalData?.end_date),
+                    engagement_weight: '' || globalData?.engagement_weight,
+                    recency_weight: '' || globalData?.recency_weight,
+                    account_verified_weight: '' || globalData?.account_verified_weight,
 
-                    exclude_account: '',
-                    total_follower_weight: globalData ? globalData.total_follower_weight : '',
-                    total_following_weight: globalData ? globalData.total_following_weight : '',
-                    total_tweet_weight: globalData ? globalData.total_tweet_weight : '',
-                    total_listed_weight: globalData ? globalData.total_listed_weight : '',
-                    account_age_range_start: globalData ? revertDate(globalData.account_age_range?.start) : '',
-                    account_age_range_end: globalData ? revertDate(globalData.account_age_range?.end) : '',
 
-                    tweet_date_start: globalData ? revertDate(globalData.tweet_date?.start) : null,
-                    tweet_date_end: globalData ? revertDate(globalData.tweet_date?.end) : '',
-                    total_like_weight: globalData ? globalData.total_like_weight : '',
-                    total_quote_weight: globalData ? globalData.total_quote_weight : '',
-                    total_retweet_weight: globalData ? globalData.total_retweet_weight : '',
-                    total_reply_weight: globalData ? globalData.total_reply_weight : '',
-                    total_impression_weight: globalData ? globalData.total_impression_weight : '',
+                    exclude_account: '' || tags,
+
+                    total_follower_weight: globalData ? globalData?.total_follower_weight : '',
+                    total_following_weight: globalData ? globalData?.total_following_weight : '',
+                    total_tweet_weight: globalData ? globalData?.total_tweet_weight : '',
+                    total_listed_weight: globalData ? globalData?.total_listed_weight : '',
+                    account_age_range_start: globalData?.account_age_range?.start ? revertDate(globalData?.account_age_range?.start) : '',
+                    account_age_range_end: globalData?.account_age_range?.end ? revertDate(globalData?.account_age_range?.end) : '',
+
+                    tweet_date_start: globalData?.tweet_date?.start ? revertDate(globalData?.tweet_date.start) : "",
+                    tweet_date_end: globalData?.tweet_date?.end ? revertDate(globalData.tweet_date?.end) : "",
+                    total_like_weight: globalData ? globalData?.total_like_weight : '',
+                    total_quote_weight: globalData ? globalData?.total_quote_weight : '',
+                    total_retweet_weight: globalData ? globalData?.total_retweet_weight : '',
+                    total_reply_weight: globalData ? globalData?.total_reply_weight : '',
+                    total_impression_weight: globalData ? globalData?.total_impression_weight : '',
 
                     hashtags_list: '',
                     hashtags_weight: '',
@@ -511,40 +524,43 @@ const AnalytisForm = () => {
                     annotations_list: '',
                     annotations_weight: '',
 
-                    account_no_verified_point: globalData ? globalData.account_no_verified_point : '',
-                    account_verified_point: globalData ? globalData.account_verified_point : '',
-                    account_business_point: globalData ? globalData.account_business_point : '',
+                    account_no_verified_point: globalData?.account_no_verified_point || '',
+                    account_verified_point: globalData?.account_verified_point || '',
+                    account_business_point: globalData?.account_business_point || '',
                     // account_verified_point: globalData ? globalData.account_verified_point : 0,
 
 
                 }}
                 validationSchema={validationSchema}
                 onSubmit={(values, { setSubmitting }) => {
+                    console.log(values)
+                    if (values) {
+                        onRun(values, setSubmitting)
 
-                    // if (values && checkIsValidEndStart(values.account_age_range_start,values.account_age_range_end) && checkIsValidEndStart(values.tweet_date_start,values.tweet_date_end)) {
-                    //     onRun(values, setSubmitting)
-
-                    // } else {
-                    //     setSubmitting(false)
-                    // }
+                    } else {
+                        setSubmitting(false)
+                    }
                 }}
             >
                 {({ values, errors, touched, isSubmitting, handleChange }) => (
-                    <Form>
+                    <Form onKeyDown={onKeyDown}>
                         <FormContainer>
 
                             <FormItem
-                                label="Vertical Name"
+                                label="Crawl Name"
                                 asterisk
                                 invalid={errors.vertical_name && touched.vertical_name}
                                 errorMessage={errors.vertical_name}
+                                className="text-[#262626]"
                             >
                                 <Field
-                                    className="bg-[#F9FAFB] text-[#9A9FA5]"
+                                    className="bg-[#F9FAFB] placeholder:text-[#9A9FA5]"
                                     type="text"
                                     name="vertical_name"
-                                    placeholder="Vertical Name"
+                                    placeholder="Name"
                                     component={Input}
+                                    readOnly={true}
+                                    disabled
                                 />
                             </FormItem>
 
@@ -554,43 +570,46 @@ const AnalytisForm = () => {
                                     label="Note"
                                 >
                                     <Field
-                                        className="bg-[#F9FAFB] text-[#9A9FA5]"
+                                        className="bg-[#F9FAFB] placeholder:text-[#9A9FA5]"
                                         name="note"
                                         placeholder="Enter note"
                                         textArea
                                         component={Input}
                                     />
-
+    
                                 </FormItem>
 
                                 {/* vertical keyword group */}
                                 <div>
                                     <div className='flex items-center justify-between mb-[16px]'>
-                                        <h2 className='text-[16px] text-[#0C72FA] font-bold'>Vertical Keyword Group</h2>
-                                        <img className='cursor-pointer' src="/img/analytics/input/Plus.svg" />
+                                        <h2 className='text-[16px] text-[#0C72FA] font-bold'>Keyword Group</h2>
+                                        {/* <img className='cursor-pointer' src="/img/analytics/input/Plus.svg" /> */}
                                     </div>
 
                                     <div className='grid grid-cols-2 gap-x-[16px]'>
                                         <FormItem
-                                            label="Vertical Keyword Group"
+                                            label="Keyword Group Name"
                                             asterisk
                                             invalid={errors.vertical_keyword_groups && touched.vertical_keyword_groups}
                                             errorMessage={errors.vertical_keyword_groups}
                                         >
 
-                                            <Field name="vertical_keyword_groups">
+                                            <Field name="vertical_keyword_groups" as="select" disabled>
                                                 {({ field, form }) => (
                                                     <Select
-                                                        placeholder="Enter Vertical Keyword Group Name"
+                                                        placeholder="Choose Keyword Group Name"
+                                                        className="placeholder:text-[#9A9FA5]"
                                                         field={field}
                                                         form={form}
                                                         options={verticalData}
                                                         isLoading={loading}
                                                         onMenuScrollToBottom={handleScrolltoBottom}
-                                                        value={verticalData.filter(
+                                                        disabled = {true}
+                                                        // defaultInputValue="kkk"
+                                                        value={verticalData?.filter(
                                                             (option) =>
                                                                 option.value ===
-                                                                values.vertical_keyword_groups
+                                                                values?.vertical_keyword_groups
                                                         )}
                                                         onChange={(option) =>
                                                             form.setFieldValue(
@@ -605,17 +624,22 @@ const AnalytisForm = () => {
                                         </FormItem>
 
                                         <FormItem
-                                            label="Vertical Keyword Group Weight"
+                                            label="Keyword Group Weight"
                                             asterisk
                                             invalid={errors.vertical_keyword_groups_weight && touched.vertical_keyword_groups_weight}
                                             errorMessage={errors.vertical_keyword_groups_weight}
+                                            
                                         >
                                             <Field
-                                                className="bg-[#F9FAFB] text-[#9A9FA5]"
+                                                
+                                                className="bg-[#F9FAFB] placeholder:text-[#9A9FA5]"
                                                 type="number"
+                                                onWheel={(e)=>{e.target.blur()}}
                                                 name="vertical_keyword_groups_weight"
-                                                placeholder="Enter Vertical Keyword Group Weight"
+                                                placeholder="Enter Keyword Group Weight"
                                                 component={Input}
+                                                min={0}
+                                                
                                             />
                                         </FormItem>
 
@@ -626,30 +650,31 @@ const AnalytisForm = () => {
                                 <div>
                                     <div className='flex items-center justify-between mb-[16px]'>
                                         <h2 className='text-[16px] text-[#0C72FA] font-bold'>Follower Group</h2>
-                                        <img className='cursor-pointer' src="/img/analytics/input/Plus.svg" />
+                                        {/* <img className='cursor-pointer' src="/img/analytics/input/Plus.svg" /> */}
                                     </div>
 
                                     <div className='grid grid-cols-2 gap-x-[16px]'>
                                         <FormItem
-                                            label="Follower Group"
+                                            label="Follower Group Name"
                                             asterisk
                                             invalid={errors.follower_group_id && touched.follower_group_id}
                                             errorMessage={errors.follower_group_id}
                                         >
-                                            <Field name="follower_group_id">
+                                            <Field name="follower_group_id" as="select" disabled>
                                                 {({ field, form }) => (
                                                     <Select
                                                         field={field}
                                                         form={form}
-                                                        className="bg-[#F9FAFB] text-[#9A9FA5]"
-                                                        placeholder="Enter Follower Group Weight"
+                                                        className="bg-[#F9FAFB] placeholder:text-[#9A9FA5]"
+                                                        placeholder="Choose Follower Group Name"
                                                         options={followerGroupData}
                                                         isLoading={loadingFollower}
+                                                        disabled={true}
                                                         onMenuScrollToBottom={handleScrolltoBottomFollower}
                                                         value={followerGroupData.filter(
                                                             (option) =>
-                                                                option.value ===
-                                                                values.follower_group_id
+                                                                option.value === values.follower_group_id
+                                                            // globalData?.follower_group_id
                                                         )}
                                                         onChange={(option) =>
                                                             form.setFieldValue(
@@ -665,15 +690,18 @@ const AnalytisForm = () => {
                                         <FormItem
                                             label="Follower Group Weight"
                                             asterisk
-                                            invalid={errors.follower_group_weight && touched.follower_group_weight}
-                                            errorMessage={errors.follower_group_weight}
+                                            invalid={errors.follower_quality_weight && touched.follower_quality_weight}
+                                            errorMessage={errors.follower_quality_weight}
                                         >
                                             <Field
                                                 type="number"
-                                                className="bg-[#F9FAFB] text-[#9A9FA5]"
-                                                name="follower_group_weight"
+                                                className="bg-[#F9FAFB] placeholder:text-[#9A9FA5] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                name="follower_quality_weight"
+                                                onWheel={(e) => { e.target.blur() }}
                                                 placeholder="Enter Follower Group Weight"
                                                 component={Input}
+                                                min={0}
+                                                
                                             />
                                         </FormItem>
 
@@ -696,61 +724,21 @@ const AnalytisForm = () => {
 
 
                                 <div className='grid grid-cols-2 gap-x-[32px] w-full text-[#262626]'>
-
-                                    <FormItem
-                                        label="End Date"
-                                        asterisk
-                                        invalid={errors.end_date && touched.end_date}
-                                        errorMessage={errors.end_date}
-                                    >
-                                        <Field name="end_date"
-                                            >
-                                            {({ field, form }) => (
-                                                <DatePicker
-                                                    end_date={true}
-                                                    placeholder="DD/MM/YYYY"
-                                                    field={field}
-                                                    form={form}
-                                                    value={field.value}
-                                                    inputFormat={dateFormat}
-                                                    onChange={(end_date) => {
-                                                        form.setFieldValue(
-                                                            field.name,
-                                                            end_date
-                                                        )
-                                                    }}
-                                                />
-                                            )}
-                                        </Field>
-                                    </FormItem>
-
-                                    <FormItem
-                                        label="Engagement weight"
-                                        asterisk
-                                        invalid={errors.engagement_weight && touched.engagement_weight}
-                                        errorMessage={errors.engagement_weight}
-                                    >
-                                        <Field
-                                            className="bg-[#F9FAFB] text-[#9A9FA5]"
-                                            type="number"
-                                            name="engagement_weight"
-                                            placeholder="Enter engagement weight"
-                                            component={Input}
-                                        />
-                                    </FormItem>
-
                                     <FormItem
                                         label="Recency weight"
                                         asterisk
                                         invalid={errors.recency_weight && touched.recency_weight}
                                         errorMessage={errors.recency_weight}
+                                        className="col-span-2"
                                     >
                                         <Field
-                                            className="bg-[#F9FAFB] text-[#9A9FA5]"
+                                            className="bg-[#F9FAFB] placeholder:text-[#9A9FA5] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                            onWheel={(e) => { e.target.blur() }}
                                             type="number"
                                             name="recency_weight"
                                             placeholder="Enter recency weight"
                                             component={Input}
+                                            min={0}
                                         // validate={validateWeight}
                                         />
                                     </FormItem>
@@ -760,13 +748,16 @@ const AnalytisForm = () => {
                                         asterisk
                                         invalid={errors.account_verified_weight && touched.account_verified_weight}
                                         errorMessage={errors.account_verified_weight}
+                                        className="col-span-2"
                                     >
                                         <Field
-                                            className="bg-[#F9FAFB] text-[#9A9FA5]"
+                                            className="bg-[#F9FAFB] placeholder:text-[#9A9FA5] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                            onWheel={(e) => { e.target.blur() }}
                                             type="number"
                                             name="account_verified_weight"
                                             placeholder="Enter account verified point"
                                             component={Input}
+                                            min={0}
                                         // validate={validateWeight}
                                         />
                                     </FormItem>
@@ -780,10 +771,14 @@ const AnalytisForm = () => {
                                                 errorMessage={errors.account_no_verified_point}
                                             >
                                                 <Field
-                                                    type="number"
-                                                    name="account_no_verified_point"
+                                                    className="bg-[#F9FAFB] placeholder:text-[#9A9FA5] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                    onWheel={(e) => { e.target.blur() }}
+                                                    name="account_no_verified_point" 
                                                     placeholder="Enter account no verification point"
                                                     component={Input}
+                                                    type="number"
+                                                    min={0}
+                                                    step="any"
                                                 // validate={validateWeight}
                                                 />
                                             </FormItem>
@@ -795,11 +790,14 @@ const AnalytisForm = () => {
                                                 errorMessage={errors.account_verified_point}
                                             >
                                                 <Field
-                                                    type="number"
-                                                    step="0.1"
+                                                    className="bg-[#F9FAFB] placeholder:text-[#9A9FA5] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                    onWheel={(e) => { e.target.blur() }}
+                                                    step="any"
+                                                    min={0}
                                                     name="account_verified_point"
                                                     placeholder="Enter account verified point"
                                                     component={Input}
+                                                    type="number"
                                                 // validate={validateName}
                                                 />
                                             </FormItem>
@@ -811,11 +809,14 @@ const AnalytisForm = () => {
                                                 errorMessage={errors.account_business_point}
                                             >
                                                 <Field
-                                                    type="number"
-                                                    step="0.1"
+                                                    className="bg-[#F9FAFB] placeholder:text-[#9A9FA5] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                    onWheel={(e) => { e.target.blur() }}
+                                                    step="any"
                                                     name="account_business_point"
                                                     placeholder="Enter Account verified business point"
                                                     component={Input}
+                                                    type="number"
+                                                    min={0}
                                                 // validate={validateName}
                                                 />
                                             </FormItem>
@@ -833,27 +834,30 @@ const AnalytisForm = () => {
                                     <FormItem
                                         label="Exclude Account"
                                     >
-                                        <Field
-                                            className="bg-[#F9FAFB] text-[#9A9FA5]"
+                                        {/* <Field
+                                            className="bg-[#F9FAFB] placeholder:text-[#9A9FA5]"
                                             type="text"
                                             name="exclude_account"
                                             placeholder="Enter Exclude Account"
                                             component={Input}
-                                        />
+                                            readOnly={true}
+                                            
+                                        /> */}
+                                        <InputKeywords tags={tags} setTags={setTags}/>
                                     </FormItem>
 
                                 </div>
 
 
-                                <div className={`${showPublicMetric ? "" : "mb-[40px]"} flex flex-row justify-between `}>
+                                {/* <div className={`${showPublicMetric ? "" : "mb-[40px]"} flex flex-row justify-between `}>
                                     <p className='text-[#0C72FA] text-[16px] font-bold'>Public Metrics</p>
                                     <div onClick={() => { handlerChangeShowPublicMetrics() }} className='flex items-center space-x-[6px] cursor-pointer'>
                                         <span className='text-[14px] text-[#595959] font-normal'>Advance</span>
                                         <img className={`${showPublicMetric && "rotate-180"}`} src="/img/analytics/metadata/vector_down.svg" />
                                     </div>
-                                </div>
+                                </div> */}
 
-                                <div className={` ${showPublicMetric ? "block h-full" : "hidden h-0"} transition-all duration-300 ease-linear col-span-2`}>
+                                {/* <div className={` ${showPublicMetric ? "block h-full" : "hidden h-0"} transition-all duration-300 ease-linear col-span-2`}>
                                     <div className='grid grid-cols-1 gap-x-[32px] w-full mt-[20px]'>
                                         <FormItem
                                         >
@@ -866,6 +870,7 @@ const AnalytisForm = () => {
                                                         name="total_follower_weight"
                                                         placeholder="Enter Total Follower Weight"
                                                         component={Input}
+                                                        min={0}
                                                     />
                                                 </div>
 
@@ -877,6 +882,7 @@ const AnalytisForm = () => {
                                                         name="total_following_weight"
                                                         placeholder="Enter Total Following Weight"
                                                         component={Input}
+                                                        min={0}
                                                     // value={values.followers_count_end}
                                                     />
                                                 </div>
@@ -896,6 +902,7 @@ const AnalytisForm = () => {
                                                         name="total_tweet_weight"
                                                         placeholder="Enter Total Tweet Weight"
                                                         component={Input}
+                                                        min={0}
                                                     />
                                                 </div>
 
@@ -907,6 +914,7 @@ const AnalytisForm = () => {
                                                         name="total_listed_weight"
                                                         placeholder="Enter Total Listed Weight"
                                                         component={Input}
+                                                        min={0}
                                                     // value={values.followers_count_end}
                                                     />
                                                 </div>
@@ -914,66 +922,70 @@ const AnalytisForm = () => {
                                         </FormItem>
                                     </div>
 
+                                    <>
+                                        {globalData?.account_age_range && <>
+                                            <p className='text-[#0C72FA] text-[16px] font-bold'>Account Age Range</p>
+                                            <div className='grid grid-cols-1 gap-x-[32px] w-full mt-[6px]'>
 
-                                    <p className='text-[#0C72FA] text-[16px] font-bold'>Account Age Range</p>
-                                    <div className='grid grid-cols-1 gap-x-[32px] w-full mt-[6px]'>
+                                                <div className='grid grid-cols-2 gap-x-[32px]'>
+                                                    <FormItem
 
-                                        <div className='grid grid-cols-2 gap-x-[32px]'>
-                                            <FormItem
+                                                        invalid={errors.account_age_range_start && touched.account_age_range_start}
+                                                        errorMessage={errors.account_age_range_start}
+                                                    >
+                                                        <Field name="account_age_range_start" placeholder="DD/MM/YYYY">
+                                                            {({ field, form }) => (
+                                                                <DatePicker
+                                                                    placeholder="DD/MM/YYYY"
+                                                                    field={field}
+                                                                    form={form}
+                                                                    value={field.value}
+                                                                    onChange={(account_age_range_start) => {
+                                                                        form.setFieldValue(
+                                                                            field.name,
+                                                                            account_age_range_start
+                                                                        )
+                                                                    }}
+                                                                />
+                                                            )}
+                                                        </Field>
+                                                    </FormItem>
+                                                    <FormItem>
+                                                        <Field name="account_age_range_end" placeholder="DD/MM/YYYY">
+                                                            {({ field, form }) => (
+                                                                <DatePicker
+                                                                    placeholder="DD/MM/YYYY"
+                                                                    field={field}
+                                                                    form={form}
+                                                                    value={field.value}
+                                                                    onChange={(account_age_range_end) => {
+                                                                        form.setFieldValue(
+                                                                            field.name,
+                                                                            account_age_range_end
+                                                                        )
+                                                                    }}
+                                                                />
+                                                            )}
+                                                        </Field>
+                                                        {!checkIsValidEndStart(values.account_age_range_start, values.account_age_range_end) && <span className='text-red-500'>To Date should be greater than From Date</span>}
+                                                    </FormItem>
+                                                </div>
+                                            </div>
+                                        </>}
+                                    </>
 
-                                                invalid={errors.account_age_range_start && touched.account_age_range_start}
-                                                errorMessage={errors.account_age_range_start}
-                                            >
-                                                <Field name="account_age_range_start" placeholder="DD/MM/YYYY">
-                                                    {({ field, form }) => (
-                                                        <DatePicker
-                                                            placeholder="DD/MM/YYYY"
-                                                            field={field}
-                                                            form={form}
-                                                            value={field.value}
-                                                            onChange={(account_age_range_start) => {
-                                                                form.setFieldValue(
-                                                                    field.name,
-                                                                    account_age_range_start
-                                                                )
-                                                            }}
-                                                        />
-                                                    )}
-                                                </Field>
-                                            </FormItem>
-                                            <FormItem>
-                                                <Field name="account_age_range_end" placeholder="DD/MM/YYYY">
-                                                    {({ field, form }) => (
-                                                        <DatePicker
-                                                            placeholder="DD/MM/YYYY"
-                                                            field={field}
-                                                            form={form}
-                                                            value={field.value}
-                                                            onChange={(account_age_range_end) => {
-                                                                form.setFieldValue(
-                                                                    field.name,
-                                                                    account_age_range_end
-                                                                )
-                                                            }}
-                                                        />
-                                                    )}
-                                                </Field>
-                                                {!checkIsValidEndStart(values.account_age_range_start, values.account_age_range_end) && <span className='text-red-500'>To Date should be greater than From Date</span>}
-                                            </FormItem>
-                                        </div>
-                                    </div>
-                                </div>
+                                </div> */}
 
                                 <div className='pt-[34px] mt-[34px] border-[#D9D9D9] border-t-[1px]'>
-                                    <div className='flex flex-row justify-between'>
+                                    {globalData?.tweet_date && <div className='flex flex-row justify-between'>
                                         <h5 className="mb-4">Tweet Parameter</h5>
                                         <div onClick={() => { handlerShowTweetParameter() }} className='flex items-center space-x-[6px] cursor-pointer'>
                                             <span className='text-[14px] text-[#595959] font-normal'>Advance</span>
                                             <img className={`${showTweetParameter && "rotate-180"}`} src="/img/analytics/metadata/vector_down.svg" />
                                         </div>
-                                    </div>
+                                    </div>}
 
-                                    <div className={` ${showTweetParameter ? "block h-full" : "hidden h-0"} transition-all duration-300 ease-linear col-span-2`}>
+                                    {globalData?.tweet_date && <div className={` ${showTweetParameter ? "block h-full" : "hidden h-0"} transition-all duration-300 ease-linear col-span-2`}>
                                         <p className='text-[#0C72FA] text-[16px] font-bold'>Tweet Date</p>
                                         <div className='grid grid-cols-1 gap-x-[32px] w-full mt-[6px]'>
 
@@ -1021,203 +1033,8 @@ const AnalytisForm = () => {
                                                 </FormItem>
                                             </div>
                                         </div>
-
-                                        {/* PUBLIC METRICS TWEET PARAMETER */}
-                                        <div className={`${showPublicMetricTweet ? "" : "mb-[40px]"} flex flex-row justify-between`}>
-                                            <p className='text-[#0C72FA] mt-[34px] text-[16px] font-bold'>Public Metrics</p>
-                                            <div onClick={() => { handlerShowPublicMetricTweet() }} className='flex items-center space-x-[6px] cursor-pointer'>
-                                                <span className='text-[14px] text-[#595959] font-normal'>Advance</span>
-                                                <img className={`${showPublicMetricTweet && "rotate-180"}`} src="/img/analytics/metadata/vector_down.svg" />
-                                            </div>
-                                        </div>
-
-                                        <div className={`${showPublicMetricTweet ? "block h-full" : "hidden h-0"}`}>
-                                            <div className=' grid grid-cols-1 gap-x-[32px] w-full mt-[20px]'>
-                                                <FormItem
-                                                // invalid={errors.Follower_quality_score && touched.Follower_quality_score}
-                                                // errorMessage={errors.Follower_quality_score}
-                                                >
-                                                    <div className='grid grid-cols-2 gap-y-[8px] gap-x-[32px]'>
-                                                        <div>
-                                                            <span className='text-[14px] font-semibold inline-block mb-[8px]'>Total Like Weight</span>
-                                                            <Field
-                                                                
-                                                                className="bg-[#F9FAFB] text-[#9A9FA5]"
-                                                                type="number"
-                                                                name="total_like_weight"
-                                                                placeholder="Enter Total Like Weight"
-                                                                component={Input}
-                                                            />
-                                                        </div>
-
-                                                        <div>
-                                                            <span className='text-[14px] font-semibold inline-block mb-[8px]'>Total Quote Weight</span>
-                                                            <Field
-                                                                className="bg-[#F9FAFB] text-[#9A9FA5]"
-                                                                type="number"
-                                                                name="total_quote_weight"
-                                                                placeholder="Enter Total Quote Weight"
-                                                                component={Input}
-                                                                value={values.total_quote_weight}
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                </FormItem>
-                                                <FormItem
-                                                // invalid={errors.Follower_quality_score && touched.Follower_quality_score}
-                                                // errorMessage={errors.Follower_quality_score}
-                                                >
-                                                    <div className='grid grid-cols-2 gap-y-[8px] gap-x-[32px]'>
-                                                        <div>
-                                                            <span className='text-[14px] font-semibold inline-block mb-[8px]'>Total Retweet Weight</span>
-                                                            <Field
-                                                                className="bg-[#F9FAFB] text-[#9A9FA5]"
-                                                                type="number"
-                                                                name="total_retweet_weight"
-                                                                placeholder="Enter Total Retweet Weight"
-                                                                component={Input}
-                                                            />
-                                                        </div>
-
-                                                        <div>
-                                                            <span className='text-[14px] font-semibold inline-block mb-[8px]'>Total Reply Weight</span>
-                                                            <Field
-                                                                className="bg-[#F9FAFB] text-[#9A9FA5]"
-                                                                type="number"
-                                                                name="total_reply_weight"
-                                                                placeholder="Enter Total Reply Weight"
-                                                                component={Input}
-                                                            // value={values.followers_count_end}
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                </FormItem>
-
-
-                                                <FormItem
-                                                // invalid={errors.Follower_quality_score && touched.Follower_quality_score}
-                                                // errorMessage={errors.Follower_quality_score}
-                                                >
-                                                    <div className='grid grid-cols-2 gap-y-[8px] gap-x-[32px]'>
-                                                        <div>
-                                                            <span className='text-[14px] font-semibold inline-block mb-[8px]'>Total Impression Weight</span>
-                                                            <Field
-                                                                className="bg-[#F9FAFB] text-[#9A9FA5]"
-                                                                type="number"
-                                                                name="total_impression_weight"
-                                                                placeholder="Enter Total Impression Weight"
-                                                                component={Input}
-                                                            // value={values.followers_count_end}
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                </FormItem>
-                                            </div>
-                                        </div>
                                     </div>
-
-
-                                    <div className={`${showPublicMetricTweet ? "" : "mb-[40px]"} flex flex-row justify-between`}>
-                                        <p className='text-[#0C72FA] text-[16px] font-bold'>Entities</p>
-                                        <div onClick={() => { handlerShowEntities() }} className='flex items-center space-x-[6px] cursor-pointer'>
-                                            <span className='text-[14px] text-[#595959] font-normal'>Advance</span>
-                                            <img className={`${showEntities && "rotate-180"}`} src="/img/analytics/metadata/vector_down.svg" />
-                                        </div>
-                                    </div>
-                                    <div className={`${showEntities ? "block h-full" : "hidden h-0"}`}>
-                                        <div className='grid grid-cols-2 gap-x-[32px] w-full mt-[20px]'>
-
-                                            <div>
-                                                <FormItem
-                                                    label="Hashtags"
-                                                >
-                                                    <Field
-                                                        type="text"
-                                                        className="col-span-1 mb-[8px] bg-[#F9FAFB] text-[#9A9FA5]"
-                                                        name="hashtags_list"
-                                                        placeholder="Enter Hashtag List"
-                                                        component={Input}
-                                                    />
-                                                    <Field
-                                                        type="text"
-                                                        className="col-span-1 bg-[#F9FAFB] text-[#9A9FA5]"
-                                                        name="hashtags_weight"
-                                                        placeholder="Enter Hashtags Weight"
-                                                        component={Input}
-                                                    />
-                                                </FormItem>
-                                            </div>
-                                            <div>
-                                                <FormItem
-                                                    label="Mentions"
-                                                >
-                                                    <Field
-                                                        type="text"
-                                                        className="col-span-1 mb-[8px] bg-[#F9FAFB] text-[#9A9FA5]"
-                                                        name="mentions_list"
-                                                        placeholder="Enter mentions list"
-                                                        component={Input}
-                                                    />
-                                                    <Field
-                                                        type="text"
-                                                        className="col-span-1 bg-[#F9FAFB] text-[#9A9FA5]"
-                                                        name="mentions_weight"
-                                                        placeholder="Enter mentions Weight"
-                                                        component={Input}
-                                                    />
-                                                </FormItem>
-                                            </div>
-
-
-                                            <div>
-                                                <FormItem
-                                                    label="Cashtags"
-                                                >
-                                                    <Field
-                                                        type="text"
-                                                        className="col-span-1 mb-[8px] bg-[#F9FAFB] text-[#9A9FA5]"
-                                                        name="cashtags_list"
-                                                        placeholder="Enter Cashtags List"
-                                                        component={Input}
-                                                    />
-                                                    <Field
-                                                        type="text"
-                                                        className="col-span-1 bg-[#F9FAFB] text-[#9A9FA5]"
-                                                        name="cashtags_weight"
-                                                        placeholder="Enter Cashtags Weight"
-                                                        component={Input}
-                                                    />
-
-                                                </FormItem>
-                                            </div>
-
-                                            
-                                            <div>
-                                                <FormItem
-                                                    label="Annotations"
-                                                >
-                                                    <Field
-                                                        type="text"
-                                                        className="col-span-1 mb-[8px] bg-[#F9FAFB] text-[#9A9FA5]"
-                                                        name="annotations_list"
-                                                        placeholder="Enter Annotations List"
-                                                        component={Input}
-                                                    />
-                                                    <Field
-                                                        type="text"
-                                                        className="col-span-1 bg-[#F9FAFB] text-[#9A9FA5]"
-                                                        name="annotations_weight"
-                                                        placeholder="Enter Annotations Weight"
-                                                        component={Input}
-                                                    />
-
-                                                </FormItem>
-                                            </div>
-                                            
-                                            
-
-                                        </div>
-                                    </div>
+                                    }
                                 </div>
 
                                 <FormItem>

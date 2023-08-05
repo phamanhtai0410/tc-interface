@@ -3,9 +3,10 @@ import {  useFormik } from "formik";
 import { useDispatch, useSelector } from "react-redux";
 import * as Yup from "yup";
 import ModalAddKeyFollowers from "./ModalAddKeyFollowers";
-import { selectFollowerEdit, selectKeyFollower, setChangeModalAddKeyFollower, setKeyValueFollower } from "store/follower/followerSlice";
+import { resetState, selectFollowerEdit, selectKeyFollower, setChangeModalAddKeyFollower, setKeyValueFollower } from "store/follower/followerSlice";
 import { createFollowerGroup, updateFollower } from "actions/follower.actions";
 import { selectUserRole } from "store/role/roleSlice";
+import InputKeywords from "./InputKeywords";
 
 
 
@@ -16,6 +17,9 @@ function validateKeys(value) {
 }
 
 const FormFollowerGroup = ({ fetchFollowerData }) => {
+    const [tags, setTags] = useState([])
+    const [errorKeyword, setErrorKeyword] = useState(false)
+    const [switchButton, setSwitchButton]=useState(false)
     const dispatch = useDispatch();
     
     const keyStore = useSelector(selectKeyFollower);
@@ -24,10 +28,10 @@ const FormFollowerGroup = ({ fetchFollowerData }) => {
 
 
     ///Api save vertical key group
-    const handleSaveFollowerGroup = async (value) => {
+    const handleSaveFollowerGroup = async (value,tags) => {
         const payload = {
             name:value.name,
-            accounts: value.keys.split(",").filter(item => item !== null && item !== undefined && item !== '' && item !== ' ')
+            accounts: tags
         }
 
         const response = await dispatch(createFollowerGroup(payload));
@@ -35,7 +39,7 @@ const FormFollowerGroup = ({ fetchFollowerData }) => {
             alert("Save Followers Group Successfully");
             fetchFollowerData();
         } else {
-            alert(response.payload.error_code);
+            alert("Follower group name existed!");
         }
     };
 
@@ -45,13 +49,16 @@ const FormFollowerGroup = ({ fetchFollowerData }) => {
         const payload = {
             id: value?.id,
             name: value?.values?.name,
-            accounts: value?.values?.keys.split(',')
+            accounts: value?.values?.keys
         }
 
         const response = await dispatch(updateFollower(payload))
         if(response.meta.requestStatus === "fulfilled"){
             alert("Update successfully")
-            location.reload()
+            // location.reload()
+            fetchFollowerData()
+        }else{
+            alert("Follower group name existed!");
         }
     }
     const handleOpenModalAddKey = () => {
@@ -73,28 +80,46 @@ const FormFollowerGroup = ({ fetchFollowerData }) => {
     const formik = useFormik({
         initialValues: {
             name: "",
-            keys: "",
+            keys: [],
         },
         validationSchema: Yup.object().shape({
             name: Yup.string()
                 .required("Follower Group Name is required"),
-            keys: Yup.string().required("Follower Account is required")
+            keys:Yup.array().min(1,'Follower Account is required')
+            // keys: Yup.string().required("Follower Account is required")
         }),
         onSubmit: (values, { resetForm }) => {
+            values.keys=tags
+            console.log(values);
             if (objEdit && objEdit.id) {
                 handleUpdateFollowerGroup({
-                id: objEdit.id,
-                values
+                    id: objEdit.id,
+                    values:{...values,keys:tags}
                })
+               setTags([])
+               resetForm({ values: "" });
+               setSwitchButton(true)
+               dispatch(resetState())
                return;
             }
-            
-            handleSaveFollowerGroup(values);
+            setTags([])
             resetForm({values: ""})
+            handleSaveFollowerGroup(values,tags);
         }
     })
-
-
+    const onKeyDown = (keyEvent)=>{
+        if ((keyEvent.charCode || keyEvent.keyCode) === 13) {
+            keyEvent.preventDefault();
+        }
+    }
+    useEffect(()=>{
+        if(tags.length === 0){
+            setErrorKeyword(true)
+        }else{
+            setErrorKeyword(false)
+        }
+        formik.values.keys = tags
+    },[tags,formik.values])
     useEffect(() => {
         if (keyStore?.length > 0) {
             formik.setFieldValue("keys", keyStore.toString())
@@ -104,15 +129,21 @@ const FormFollowerGroup = ({ fetchFollowerData }) => {
     useEffect(()=>{
         formik.setFieldValue("keys", objEdit.key?.toString())
         formik.setFieldValue("name", objEdit.name)
-
+        if(tags.length === 0 && objEdit?.key.length === 0){
+            setSwitchButton(true)
+        }
+        else{
+            setSwitchButton(false)
+        }
+        setTags(objEdit?.key)
     },[objEdit])
 
     return (
         <div>
-            <form onSubmit={formik.handleSubmit}>
-                <div className="grid grid-cols-2 gap-8">
+            <form onSubmit={formik.handleSubmit} onKeyDown={onKeyDown}>
+                <div className="grid grid-cols-1 gap-8">
                     <div>
-                        <p> Follower Group Name</p>
+                        <p className="font-semibold text-[14px] text-[#262626]"> Follower Group Name</p>
                         <input
                             className="mt-2 w-full h-[44px] py-3 px-4 bg-[#F9FAFB] border-solid border-[1px] border-[#E8E8E8] outline-none rounded-[4px]"
                             id="name"
@@ -131,8 +162,8 @@ const FormFollowerGroup = ({ fetchFollowerData }) => {
                         
                         <div className="relative">
                             
-                            <p>Follower Accounts</p>
-                            <input
+                            <p className="font-semibold text-[14px] text-[#262626]">Follower Accounts</p>
+                            {/* <input
                                 className="mt-2 w-full h-[44px] py-3 px-4 bg-[#F9FAFB] border-solid border-[1px] border-[#E8E8E8] outline-none rounded-[4px]"
                                 id="keys"
                                 name="keys"
@@ -140,16 +171,17 @@ const FormFollowerGroup = ({ fetchFollowerData }) => {
                                 placeholder="Enter Follower Accounts or click Add icon"
                                 onChange={formik.handleChange}
                                 value={formik.values.keys}
-                            />
-                            <img
+                            /> */}
+                            <InputKeywords tags={tags} setTags={setTags}/>
+                            {/* <img
                                 onClick={() => {
                                     handleOpenModalAddKey()
                                     handleSetKey(formik.values.keys)
                                 }}
-                                className='absolute top-[47%] right-0 cursor-pointer' src='/img/analytics/vertical/ic_add.svg' alt='icon add' />
+                                className='absolute top-[47%] right-0 cursor-pointer' src='/img/analytics/vertical/ic_add.svg' alt='icon add' /> */}
                         </div>
                         
-                        {formik.errors.keys && formik.touched.keys && (
+                        {formik.errors.keys && formik.touched.keys && errorKeyword && (
                             <p className="text-red-500">{formik.errors.keys}</p>)}
                         
 
@@ -157,7 +189,7 @@ const FormFollowerGroup = ({ fetchFollowerData }) => {
                     </div>
                 </div>
 
-                {!objEdit.id ? <button className="w-[130px] h-[44px] bg-[#0C72FA] text-[#fff] mx-auto mt-8 block rounded-[4px] text-[14px] font-bold" type="submit">
+                {switchButton===true ? <button className="w-[130px] h-[44px] bg-[#0C72FA] text-[#fff] mx-auto mt-8 block rounded-[4px] text-[14px] font-bold" type="submit">
                     Save
                 </button> : <button className="w-[130px] h-[44px] bg-[#0C72FA] text-[#fff] mx-auto mt-8 block rounded-[4px] text-[14px] font-bold" type="submit">
                     Update

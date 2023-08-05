@@ -84,7 +84,7 @@ const Select = React.forwardRef((props, ref) => {
     } = props
 
 
-
+    const disabled = props.disabled
     const { themeColor, controlSize, primaryColorLevel, mode } = useConfig()
     const formControlSize = useForm()?.size
     const inputGroupSize = useInputGroup()?.size
@@ -153,6 +153,7 @@ const Select = React.forwardRef((props, ref) => {
 
     return (
         <Component
+            isDisabled={disabled}
             className={selectClass}
             classNamePrefix={'select'}
             ref={ref}

@@ -1,7 +1,7 @@
 import React from 'react'
 import classNames from 'classnames'
 import PropTypes from 'prop-types'
-
+import './table.css'
 const Table = React.forwardRef((props, ref) => {
     const {
         borderlessRow,
@@ -23,8 +23,9 @@ const Table = React.forwardRef((props, ref) => {
     )
 
     return (
-        <div className={classNames(oveerflow && 'overflow-x-auto')}>
-            <Component className={tableClass} {...rest} ref={ref}>
+        <div
+            className={classNames(oveerflow && 'overflow-x-auto h-[calc(100vh-230px)] table_scroll')}>
+            <Component className={`${tableClass} relative`} {...rest} ref={ref}>
                 {children}
             </Component>
         </div>

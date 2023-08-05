@@ -1,7 +1,7 @@
 const appConfig = {
     // apiPrefix: '/api',
-    apiPrefix: 'https://tc-api.esollabs.com/v1/tool',
-    authenticatedEntryPath: '/pages/vertical-keyword',
+    apiPrefix: process.env.REACT_API_ENDPOINT,
+    authenticatedEntryPath: 'pages/analytics/output',
     unAuthenticatedEntryPath: '/sign-in',
     tourPath: '/',
     locale: 'en',

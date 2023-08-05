@@ -118,5 +118,20 @@ module.exports = {
             ],
         }),
         require('@tailwindcss/typography'),
+        require('@tailwindcss/line-clamp'),
+        // plugin(function ({ addUtilities }) {
+        //     addUtilities({
+        //         '.arrow-hide': {
+        //             '&::-webkit-inner-spin-button': {
+        //                 '-webkit-appearance': 'none',
+        //                 'margin': 0
+        //             },
+        //             '&::-webkit-outer-spin-button': {
+        //                 '-webkit-appearance': 'none',
+        //                 'margin': 0
+        //             },
+        //         }
+        //     })
+        // })
     ],
 }

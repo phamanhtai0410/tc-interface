@@ -35,18 +35,21 @@ const FooterContent = () => {
 
 export default function Footer({ pageContainerType }) {
     return (
-        <footer
-            className={classNames(
-                `footer flex flex-auto items-center h-16 ${PAGE_CONTAINER_GUTTER_X}`
-            )}
-        >
-            {/* {pageContainerType === 'contained' ? (
-                <Container>
-                    <FooterContent />
-                </Container>
-            ) : (
-                <FooterContent />
-            )} */}
-        </footer>
+        <>
+            
+        </>
+        // <footer
+        //     className={classNames(
+        //         `footer flex flex-auto items-center h-16 ${PAGE_CONTAINER_GUTTER_X}`
+        //     )}
+        // >
+        //     {/* {pageContainerType === 'contained' ? (
+        //         <Container>
+        //             <FooterContent />
+        //         </Container>
+        //     ) : (
+        //         <FooterContent />
+        //     )} */}
+        // </footer>
     )
 }

@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { Field, Form, Formik, useFormik } from "formik";
 import { Input, Button, FormItem, FormContainer } from "components/ui";
+import InputKeywords from "./InputKeywords";
 import { verticalSchema } from "utils/schema/schema";
 import { useDispatch, useSelector } from "react-redux";
 import { createVerticalGroup, updateVertical } from "actions/vertical.actions";
 import {
+    resetState,
     selectKey,
     selectVerticalEdit,
     setChangeModalAddKey,
@@ -13,6 +15,7 @@ import {
 import * as Yup from "yup";
 import ModalAddKeyVertical from "./ModalAddKeyVertical";
 import { selectUserRole } from "store/role/roleSlice";
+import _ from "lodash";
 
 function validateName(value) {
     if (!value) {
@@ -33,34 +36,32 @@ function validateWeight(value) {
 }
 
 function validateKeys(value) {
-    if (value.length === 0) {
-        return "Keys invalid";
-    }
+    return value.length === 0 ? true : false;
 }
 
 const FormVarticalGroup = ({ fetchVerticalData }) => {
+    const [tags, setTags] = useState([])
+    const [errorKeyword, setErrorKeyword] = useState(false)
+    const [switchButton, setSwitchButton] = useState(false)
     const dispatch = useDispatch();
 
     const keyStore = useSelector(selectKey);
     const objEdit = useSelector(selectVerticalEdit)
     const user = useSelector(selectUserRole)
-
-   
     ///Api save vertical key group
-    const handleSaveVerticalGroup = async (value) => {
-
+    const handleSaveVerticalGroup = async (value, tags) => {
         const payload = {
             name: value.name,
-            keywords: value.keys.split(",").filter(item => item !== null && item !== undefined && item !== '' && item!==' ')
+            keywords: tags
         }
-
+        // console.log(payload);
         // console.log("---payload", payload)
         const response = await dispatch(createVerticalGroup(payload));
         if (response.meta.requestStatus === "fulfilled") {
-            alert("Save Vertical Group Successfully");
+            alert("Save Keyword Group Successfully");
             fetchVerticalData();
         } else {
-            alert(response.payload.error_code);
+            alert("Keyword group name existed!");
         }
     };
 
@@ -71,13 +72,15 @@ const FormVarticalGroup = ({ fetchVerticalData }) => {
         const payload = {
             id: value?.id,
             name: value?.values?.name,
-            keywords: value?.values?.keys.split(',')
+            // keywords: value?.values?.keys.split(',')
+            keywords: value?.values?.keys
         }
-
         const response = await dispatch(updateVertical(payload))
         if (response.meta.requestStatus === "fulfilled") {
-            alert("Edit successfully")
-            location.reload()
+            alert("Update successfully")
+            fetchVerticalData()
+        }else{
+            alert("Keyword group name existed!");
         }
     }
     const handleOpenModalAddKey = () => {
@@ -99,57 +102,77 @@ const FormVarticalGroup = ({ fetchVerticalData }) => {
     const formik = useFormik({
         initialValues: {
             name: "",
-            keys: "",
-        },
+            keys: [],
+        },  
         validationSchema: Yup.object().shape({
             name: Yup.string()
-                .required("Vertical Keyword Group Name is required"),
-            keys: Yup.string().required("Keys is required")
+                .required("Keyword Group Name is required"),
+            keys: Yup.array().min(1,'Keys is required')
         }),
         onSubmit: (values, { resetForm }) => {
-
+            values.keys = tags
             if (objEdit && objEdit.id) {
-                
                 handleUpdate({
                     id: objEdit.id,
-                    values
+                    values: { ...values, keys: tags }
                 })
+                setTags([])
+                resetForm({ values: "" });
+                setSwitchButton(true)
+                dispatch(resetState())
                 return;
-            } 
-            handleSaveVerticalGroup(values);
+            }
+            // setErrorKeyword(false)
+            setTags([])
             resetForm({ values: "" });
+            handleSaveVerticalGroup(values, tags);
         }
+
+
     })
-
-
+    const onKeyDown = (keyEvent)=>{
+        if ((keyEvent.charCode || keyEvent.keyCode) === 13) {
+            keyEvent.preventDefault();
+        }
+    }
+    useEffect(()=>{
+        if(tags.length === 0){
+            setErrorKeyword(true)
+        }else{
+            setErrorKeyword(false)
+        }
+        formik.values.keys = tags
+    },[tags,formik.values])
     useEffect(() => {
         if (keyStore?.length > 0) {
-            formik.setFieldValue("keys", keyStore.toString())
+            formik.setFieldValue("keys", keyStore)
         }
     }, [keyStore])
-
     useEffect(() => {
-        formik.setFieldValue("keys", objEdit.key?.toString())
+        formik.setFieldValue("keys", objEdit.key)
         formik.setFieldValue("name", objEdit.name)
-
+        if(tags.length === 0 && objEdit?.key.length === 0){
+            setSwitchButton(true)
+        }
+        else{
+            setSwitchButton(false)
+        }
+        setTags(objEdit?.key)
     }, [objEdit])
-
-
-
 
 
     return (
         <div>
-            <form onSubmit={formik.handleSubmit}>
-                <div className="grid grid-cols-2 gap-8">
+            <form onSubmit={formik.handleSubmit} onKeyDown={onKeyDown}>
+                <div className="grid grid-cols-1 gap-8">
                     <div>
-                        <p>Vertical Keyword Group Name</p>
+                        <p className="font-semibold text-[14px] text-[#262626]">Keyword Group Name</p>
                         <input
                             className="mt-2 w-full h-[44px] py-3 px-4 bg-[#F9FAFB] border-solid border-[1px] border-[#E8E8E8] outline-none rounded-[4px]"
                             id="name"
                             name="name"
                             type="text"
-                            placeholder="Enter Vertical Keyword Group Name"
+                            placeholder="Enter Keyword Group Name"
                             onChange={formik.handleChange}
                             value={formik.values.name}
                         />
@@ -160,8 +183,8 @@ const FormVarticalGroup = ({ fetchVerticalData }) => {
 
                     <div>
                         <div className="relative">
-                            <p>Keys</p>
-                            <input
+                            <p className="font-semibold text-[14px] text-[#262626]">Keys</p>
+                            {/* <input  
                                 className="mt-2 w-full h-[44px] py-3 px-4 bg-[#F9FAFB] border-solid border-[1px] border-[#E8E8E8] outline-none rounded-[4px]"
                                 id="keys"
                                 name="keys"
@@ -169,23 +192,26 @@ const FormVarticalGroup = ({ fetchVerticalData }) => {
                                 placeholder="Enter Keys or click Add icon"
                                 onChange={formik.handleChange}
                                 value={formik.values.keys}
-                            />
-                            <img
+                            /> */}
+                            <InputKeywords tags={tags} setTags={setTags} />
+
+                            
+                            {/* <img
                                 onClick={() => {
                                     handleOpenModalAddKey()
                                     handleSetKey(formik.values.keys)
                                 }}
-                                className='absolute top-[47%] right-0 cursor-pointer' src='/img/analytics/vertical/ic_add.svg' alt='icon add' />
+                                className='absolute top-[47%] right-0 cursor-pointer' src='/img/analytics/vertical/ic_add.svg' alt='icon add' /> */}
                         </div>
-                        {formik.errors.keys && formik.touched.keys && (
+                        {formik.errors.keys && formik.touched.keys && errorKeyword &&(
                             <p className="text-red-500">{formik.errors.keys}</p>)}
-                        
-
+                        {/* {errorKeyword && <p className="text-red-500">Keys is required</p>} */}
+                            
                         <ModalAddKeyVertical />
                     </div>
                 </div>
 
-                {!objEdit.id ? <button className="w-[130px] h-[44px] bg-[#0C72FA] text-[#fff] mx-auto mt-8 block rounded-[4px] text-[14px] font-bold" type="submit">
+                {switchButton===true ? <button className="w-[130px] h-[44px] bg-[#0C72FA] text-[#fff] mx-auto mt-8 block rounded-[4px] text-[14px] font-bold" type="submit">
                     Save
                 </button> : <button className="w-[130px] h-[44px] bg-[#0C72FA] text-[#fff] mx-auto mt-8 block rounded-[4px] text-[14px] font-bold" type="submit">
                     Update

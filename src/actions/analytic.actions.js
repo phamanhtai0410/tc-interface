@@ -127,3 +127,16 @@ export const fetchResultAnalytic = createAsyncThunk(
     }
 )
 
+// fetch getAnalyticsVertical - new flow
+
+export const fetchGetAnalyticsVertical = createAsyncThunk(
+    'analytics/fetchGetAnalyticsVertical',
+        async (params) => {
+            const response = await AnalyticService.getAnalyticsVertical(
+                params
+            )
+
+            return response.data
+        }
+)
+

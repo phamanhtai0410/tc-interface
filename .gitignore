@@ -15,7 +15,7 @@ pids
 
 #file
 safelist.txt
-src/index.css
+index.css
 
 # Dependency directories
 node_modules

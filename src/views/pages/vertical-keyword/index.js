@@ -48,19 +48,18 @@ const VerticalKeyword = () => {
 
 
     return (
-        <AdaptableCard className="h-full py-[24px] px-[32px]" bodyClass="h-full">
-            <h3 className="mb-4 lg:mb-0">Vertical Keyword Group</h3>
-            <div className='my-[48px]'>
-                {checkRoles(user?.roles) && <FormVarticalGroup fetchVerticalData={fetchVerticalData} />}
+        <div className="h-full" bodyClass="h-full">
+            <div className='bg-[#fff] mb-[32px] py-[24px] px-[32px] rounded-lg shadow-[0_4px_20px_0_rgba(0,0,0,0.03)]'>
+                <h3 className="mb-4 lg:mb-6">Keyword Group</h3>
+                <hr />
+                <div className='my-[48px]'>
+                    {checkRoles(user?.roles) && <FormVarticalGroup fetchVerticalData={fetchVerticalData} />}
+                </div>
             </div>
-
-            <VerticalKeyTable verticalData={verticalData}/>
-
-            <div className='flex justify-center mt-[32px]'>
-                <Pagination currentPage={querySize.page} total={numPages} setQuerySize={setQuerySize}/>
+            <div className='bg-[#fff] shadow-[0_4px_20px_0_rgba(0,0,0,0.03)]'>
+                <VerticalKeyTable verticalData={verticalData} fetchVerticalData={fetchVerticalData} />
             </div>
-
-        </AdaptableCard>
+        </div>
     )
 }
 

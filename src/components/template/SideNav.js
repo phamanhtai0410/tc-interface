@@ -34,6 +34,7 @@ const SideNav = () => {
         (state) => state.theme.primaryColorLevel
     )
     const navMode = useSelector((state) => state.theme.navMode)
+    
     const mode = useSelector((state) => state.theme.mode)
     const direction = useSelector((state) => state.theme.direction)
     const currentRouteKey = useSelector(
@@ -84,7 +85,7 @@ const SideNav = () => {
                         sideNavCollapse ? sideNavCollapseStyle : sideNavStyle
                     }
                     className={classNames(
-                        'side-nav bg-white',
+                        'side-nav bg-white h-full',
                         sideNavColor(),
                         !sideNavCollapse && 'side-nav-expand'
                     )}

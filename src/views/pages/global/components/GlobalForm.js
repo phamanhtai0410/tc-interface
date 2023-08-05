@@ -641,15 +641,15 @@ const GlobalForm = () => {
                                             </div>
                                         </div>
 
-                                        <div className={`${showPublicMetricsParameterGlobal ? "" : "mb-[40px]"} mt-[34px] flex flex-row justify-between items-center`}>
+                                        {/* <div className={`${showPublicMetricsParameterGlobal ? "" : "mb-[40px]"} mt-[34px] flex flex-row justify-between items-center`}>
                                             <p className='text-[#0C72FA] text-[16px] font-bold'>Public Metrics</p>
                                             <div onClick={() => { handleShowPublicMetricsParameterGlobal() }} className='flex items-center space-x-[6px] cursor-pointer'>
                                                 <span className='text-[14px] text-[#595959] font-normal'>Advance</span>
                                                 <img className={`${showPublicMetricsParameterGlobal && "rotate-180"}`} src="/img/analytics/metadata/vector_down.svg" />
                                             </div>
-                                        </div>
+                                        </div> */}
 
-                                        <div className={` ${showPublicMetricsParameterGlobal ? "block h-full" : "hidden h-0"} transition-all duration-300 ease-linear col-span-2`}>
+                                        {/* <div className={` ${showPublicMetricsParameterGlobal ? "block h-full" : "hidden h-0"} transition-all duration-300 ease-linear col-span-2`}>
                                             <div className='grid grid-cols-1 gap-x-[32px] w-full mt-[20px]'>
 
                                                 <div className='grid grid-cols-2 gap-y-[8px] gap-x-[32px]'>
@@ -754,7 +754,7 @@ const GlobalForm = () => {
                                                 </div>
 
                                             </div>
-                                        </div>
+                                        </div> */}
 
                                     </div>
 

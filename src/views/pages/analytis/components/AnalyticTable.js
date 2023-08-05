@@ -4,29 +4,65 @@ import { Spinner, Tabs } from 'components/ui'
 import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate, useParams } from 'react-router-dom'
 import { selectListAnalytic } from 'store/analytics/analyticSlice'
-import { fetchDetailAnalytic, fetchListAnalytic } from 'actions/analytic.actions'
 import TabList from 'components/ui/Tabs/TabList'
 import TabNav from 'components/ui/Tabs/TabNav'
 import OrderDetails from '../detail'
 import { selectDetailAnalytic, selectIdTab, setAnalyticId, setTabId } from 'store/analytics/analyticDetailSlice'
 import AccessDenied from 'views/pages/AccessDenied'
 import ModalListAnalytic from '../output/components/ModalListAnalytic'
+import moment from 'moment'
 
 
 
 
-const AnalyticTable = ({ stateLoading, setStateLoading, handleDetailAnalytic, data }) => {
+const AnalyticTable = ({ stateLoading, setStateLoading, handleDetailAnalytic, data, loading, setLoading, fetchDetailAnalytic }) => {
+    const theDateToday = new Date()
+    var formattedDate = theDateToday.getTime()/1000;
     const navigate = useNavigate()
     //const tableRef = useRef(null)
     const dispatch = useDispatch()
     // const top_data = data.slice(0, 5);
+    /** */
     const { run_id } = useParams()
     const id_tab = useSelector(selectIdTab)
     const [tabValue, setTabvalue] = useState([])
     const datafetch = useSelector(selectListAnalytic);
     const [idDetail, setIdDetail] = useState(run_id || data[0]._id)
+    const [date, setDate] = useState(0)
+    //--- Temporary not use ---
+    /** */
+
     // const [stateLoading, setStateLoading] = useState(false)
+    const [tabDays,setTabDays] = useState([])
+    const [hashId, setHashId] = useState(6)
     
+    const getListDayWithin5days = () => {
+        let currentDate = new Date();
+        
+        // Create an array to store the result
+        let daysWithin5DaysBefore = [];
+
+        // Loop through the past 5 days
+        for (let i = 0; i < 5; i++) {
+            // Calculate the date by subtracting the number of days
+            let date = new Date();
+            date.setHours(0);
+            date.setMinutes(0);
+            date.setSeconds(0);
+            date.setMilliseconds(0);
+            date.setDate(currentDate.getDate() - i);
+
+            // Add the date to the array
+            daysWithin5DaysBefore.push({ id: i, value: moment(date).format("DD/MM/YYYY"),timestamp: date.getTime() });
+        }
+        daysWithin5DaysBefore.splice(0, 0, { id: 6, value: 'All',timestamp:null })
+        // Print the list of dates
+        setTabDays(daysWithin5DaysBefore)
+    }
+
+    useEffect(() => {
+        getListDayWithin5days()
+    }, [])
 
     useEffect(() => {
         if (idDetail) {
@@ -84,41 +120,35 @@ const AnalyticTable = ({ stateLoading, setStateLoading, handleDetailAnalytic, da
         
     }
 
+    
 
     const handleRunAgain = async (item) => {
         navigate(`/pages/analytis/update/${item.analytics_id}`, {
             state: item
         })
+    }
 
+    const handleSetHashId = (item) => {
+        setHashId(item.id)
+        setDate(item.timestamp/1000)
     }
 
     return (
         <>
             <div>
                 <Tabs defaultValue={id_tab} variant="pill">
-                    <TabList >
+                    <TabList className="border-solid border-b-[1px] border-[#e8e8e8]">
                         {
-                            tabValue?.map((item, index) => (
-                                <div className='border-r-[1px] border-[#E8E8E8]'>
-                                    <TabNav
-                                        className={(item._id?.toLowerCase() === idDetail?.toLowerCase()) ? `bg-[#1890FF] text-[#FFFFFF] ` : 'bg-transparent text-[#262626]'}
-                                        value={item._id}
-                                        key={index}
-                                        onClick={() => {
-                                            handleDetail(item._id)
-                                            handleRunAgainById(item)
-                                        }}
-                                    // onClick={() => handleDetail(item)}
-                                    >
-                                        {
-                                            (item.status !== "DONE") && (
-                                                <Spinner className="mr-[12px]" />
-                                            )
-                                        }
-                                        {item.vertical_name}
-                                    </TabNav>
-                                </div>
-                            ))                            
+                            <div className='text-[#9A9FA5] font-semibold text-[14px]'>
+                                {tabDays.map((tab, index) => {
+                                    return (
+                                        <span onClick={()=>{handleSetHashId(tab)}} key={index} className={`${tab.id === hashId ? 'text-[#1890FF] bg-[#FFFFFF] border-b-[1px] border-[#1890FF] border-solid rounded-none' : ''} py-[10px] inline-block px-[30px] cursor-pointer font-bold`}>
+                                            { tab.id === 0 ? 'Today' : tab.value}
+                                        </span>
+                                    )
+                                })}
+                            </div>
+                           
                         }
 
                         {
@@ -132,7 +162,7 @@ const AnalyticTable = ({ stateLoading, setStateLoading, handleDetailAnalytic, da
                         }
                         
                     </TabList>
-                    <div className="p-4">
+                    <div className="py-4">
                         {
 
                             // data_detail?.items.length !=0 ? (
@@ -140,7 +170,7 @@ const AnalyticTable = ({ stateLoading, setStateLoading, handleDetailAnalytic, da
                             // ): (
                             //     <AccessDenied handleRunAgain={handleRunAgain} />
                             // )
-                            <OrderDetails run_id={run_id} handleRunAgain={handleRunAgain} />
+                            <OrderDetails run_id={run_id} handleRunAgain={handleRunAgain} loading={loading} setLoading={setLoading} fetchDetailAnalytics={fetchDetailAnalytic} date={date}/>
                         }
                         
                     </div>

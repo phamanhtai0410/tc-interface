@@ -19,6 +19,16 @@ const Switcher = forwardRef((props, ref) => {
         readOnly,
         unCheckedContent,
         field,
+        type,
+        lstFollowerWatch,
+        setFollowerWatch,
+        followerWatch,
+        setAutoConvert,
+        dataTemp,
+        dataAnalyst,
+        setDataAnalyst,
+        date,
+        setFlag,
         ...rest
     } = props
 
@@ -33,6 +43,69 @@ const Switcher = forwardRef((props, ref) => {
             setSwitcherChecked(checked)
         }
     }, [checked])
+
+    ///function: filter list of new follower watch
+
+    const filterListNewFollowerWatch = () => { 
+        let listUpdate = [...lstFollowerWatch];
+        setFollowerWatch(listUpdate.filter(item => item.is_new))
+    }
+
+    //Check each change of switcherChecked and type === follower watch
+
+    useEffect(() => {
+        if (switcherChecked && type === "follower_watch"){
+            filterListNewFollowerWatch()
+        } else if (!switcherChecked && type === "follower_watch") {
+            setFollowerWatch(followerWatch.listFollowerWatch)
+        }
+    }, [switcherChecked])
+
+  
+
+
+    // type = "follower_watch"
+    useEffect(() => { 
+        if (switcherChecked && type === "Input") {
+            setAutoConvert(true)
+        } else if (!switcherChecked && type === "Input") {
+            setAutoConvert(false)
+        }
+    }, [switcherChecked])
+
+    //type= filter_analytics
+
+
+    const userSameDay = (data) => {
+        const recency = data.created_time;
+        return recency >= date;
+    }
+    useEffect(() => {
+        if (switcherChecked && type === "filter_analytics" && dataAnalyst.length > 0) {
+            const listInWatchAccount = dataAnalyst.filter(item => item.in_watch_account);
+            if (listInWatchAccount.length === 0) {
+                setFlag(true)
+                setDataAnalyst(listInWatchAccount)
+            } else {
+                setFlag(false)
+                setDataAnalyst(listInWatchAccount)
+            }
+        } else if (!switcherChecked && type === "filter_analytics") {
+            if (date?.value) {
+                setDataAnalyst(dataTemp)
+            }
+            const dataFilterDay = dataTemp.filter(userSameDay)
+            setDataAnalyst(dataFilterDay)
+            // setDataAnalyst(data)
+            setFlag(false)
+        }
+    }, [switcherChecked])   
+
+    useEffect(() => {
+        if (type === 'filter_analytics' && switcherChecked) {
+            setSwitcherChecked(false)
+        }
+    }, [date])
 
     const getControlProps = () => {
         let checkedValue = switcherChecked
@@ -52,6 +125,7 @@ const Switcher = forwardRef((props, ref) => {
     }
 
     const controlProps = getControlProps()
+
 
     const handleChange = (e) => {
         const nextChecked = !switcherChecked

@@ -11,6 +11,9 @@ import { getListVerticalGroup, removeVertical } from 'actions/vertical.actions'
 import { setEdit } from 'store/vertical/verticalSlice'
 import { selectUserRole } from 'store/role/roleSlice'
 
+import Keywords from './Keywords'
+import PopupDelete from './PopupDelete'
+
 
 const inventoryStatusColor = {
     0: {
@@ -30,33 +33,34 @@ const inventoryStatusColor = {
     },
 }
 
-const ActionColumn = ({ row }) => {
+const ActionColumn = ({ row, setIsOpenModal,setGroupName }) => {
     const dispatch = useDispatch()
     const { textTheme } = useThemeClass()
     const navigate = useNavigate()
     const user = useSelector(selectUserRole)
-
     const onEdit = () => {
-
+        console.log(row);
         dispatch(setEdit(row))
+        // console.log(dispatch(setEdit(row)));
     }
 
-    const onDelete = async () => {
+    // const onDelete = async () => {
 
-        const response = await dispatch(removeVertical(row._id))
-        if (response.meta.requestStatus === "fulfilled") {
-            alert("Remove successfully")
-            window.location.reload()
-        }
+    //     const response = await dispatch(removeVertical(row._id))
+    //     if (response.meta.requestStatus === "fulfilled") {
+    //         alert("Remove successfully")
+    //         window.location.reload()
+    //     }
+    // }
+    const handleOpenModal = ()=>{
+        setIsOpenModal(true)
+        setGroupName({
+            name:row.name,
+            id:row._id
+        })
     }
-
     return (
-        <div className="flex justify-around w-[200px] ml-auto">
-            <span
-                className="text-[#0C72FA] text-[12px] font-medium cursor-pointer"
-            >
-                Detail
-            </span>
+        <div className="flex w-[200px] ml-auto gap-4">
 
             {user?.roles?.length >=1 && user?.roles?.[0] !== 'users' && <>
                 <span
@@ -67,7 +71,7 @@ const ActionColumn = ({ row }) => {
                 </span>
                 <span
                     className="text-[#F5222D] text-[12px] font-medium cursor-pointer"
-                    onClick={onDelete}
+                    onClick={handleOpenModal}
                 >
                     Remove
                 </span>
@@ -93,30 +97,38 @@ const ActionColumn = ({ row }) => {
 //     )
 // }
 
-const VerticalKeyTable = ({ verticalData }) => {
-
+const VerticalKeyTable = ({ verticalData,fetchVerticalData }) => {
+    const [isOpenModal, setIsOpenModal] = useState(false)
+    const [groupName, setGroupName] = useState({
+        name:"",
+        id:""
+    })
     const tableRef = useRef(null)
     //load when component did mount
 
     const columns = useMemo(
         () => [
             {
-                header: '#',
-                accessorKey: 'index',
-            },
-            {
                 header: 'Name',
                 accessorKey: 'name',
+                cell:(props)=><p className='w-44'>{props.row.original.name}</p>
             },
             {
                 header: 'Keys',
-                accessorKey: 'keywords'
+                accessorKey: 'keywords',
+                cell:(props)=>{
+                    const listKeywords = props.row.original.keywords
+                    return(
+                        <Keywords keywords={listKeywords}/>    
+                    )
+                }
             },
             {
                 // header: 'Action',
                 id: 'action',
-                cell: (props) => <ActionColumn row={props.row.original} />,
+                cell: (props) => <ActionColumn row={props.row.original} setIsOpenModal={setIsOpenModal} setGroupName={setGroupName}/>,
             },
+
         ],
         []
     )
@@ -154,6 +166,7 @@ const VerticalKeyTable = ({ verticalData }) => {
                 onSelectChange={onSelectChange}
                 onSort={onSort}
             />
+            <PopupDelete fetchVerticalData={fetchVerticalData} isOpenModal={isOpenModal} setIsOpenModal={setIsOpenModal} groupName={groupName}/>
         </>
     )
 }

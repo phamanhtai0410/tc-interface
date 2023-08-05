@@ -6,6 +6,7 @@ export const initialTableData = {
     page: 0,
     page_size: 10,
     num_of_page: 0,
+    notes:"",
 };
 
 export const initialFilterData = {
@@ -46,6 +47,9 @@ const analyticSlice = createSlice({
       state.metadata.isOpen = action.payload.isOpen;
       state.metadata.row = action.payload.row;
       state.metadata.vertical_name = action.payload.vertical_name
+    },
+    setNotes: (state, action) => { 
+      state.notes = action.payload.note
     }
   },
   extraReducers: (builder) =>
@@ -69,7 +73,7 @@ const analyticSlice = createSlice({
 
 export default analyticSlice.reducer;
 
-export const { updateAnalyticList, setTableData, setFilterData,setChangeModalDeleteMetadata } =
+export const { updateAnalyticList, setTableData, setFilterData, setChangeModalDeleteMetadata, setNotes } =
   analyticSlice.actions;
 
 export const selectListAnalytic = (state) => state.analytic || [];
@@ -78,5 +82,6 @@ export const selectFilterData = (state) => state.analytic.filterData || [];
 export const selectMetaData = (state) => state.analytic.metadata;
 export const selectOpenMetaData = (state) => state.analytic.metadata.isOpen;
 export const selectDataRemove = (state) => state.analytic.metadata.row;
-
+//
+export const selectNotes = (state) => state.analytic.notes;
 

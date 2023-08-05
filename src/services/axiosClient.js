@@ -24,7 +24,7 @@ const processQueue = (error, token = null) => {
   failedQueue = [];
 }
 
-const baseURL = appConfig.apiPrefix
+const baseURL = process.env.REACT_APP_API_ENDPOINT;
 
 const axiosClient = axios.create({
   baseURL:baseURL,

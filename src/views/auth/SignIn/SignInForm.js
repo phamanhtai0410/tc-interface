@@ -88,7 +88,7 @@ const SignInForm = (props) => {
                                     type="text"
                                     autoComplete="off"
                                     name="username"
-                                    placeholder="User Name"
+                                    placeholder="Enter your email address"
                                     component={Input}
                                 />
                             </FormItem>
@@ -100,9 +100,9 @@ const SignInForm = (props) => {
                                 errorMessage={errors.password}
                             >
                                 <Field
-                                    autoComplete="off"
+                                    autoComplete="off"d
                                     name="password"
-                                    placeholder="Password"
+                                    placeholder="Enter your password"
                                     component={PasswordInput}
                                 />
                             </FormItem>

@@ -1,17 +1,24 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { DataTable } from 'components/shared'
 import { useNavigate } from 'react-router-dom' 
+import { useDispatch } from 'react-redux'
+import { deleteUser, getListUsersAction } from 'actions/user.actions'
+import PopupModal from 'views/pages/follower-watch/components/PopupModal'
+import ModalDeleteUser from './ModalDeleteUser'
 
 
-const ActionColumn = ({ row }) => {
+const ActionColumn = ({ row, setIsOpenModal, setUserName }) => {
     const navigate = useNavigate()
-
+    const dispatch = useDispatch()
+    
     const onEdit = () => {
        navigate(`/pages/user/change-pwd/${row.id}`,{state:{row}})
     }
 
-    const onDelete = () => {
-        
+    const onDelete =  () => {
+        setIsOpenModal(true)
+        setUserName(row)
+       
     }
 
     return (
@@ -33,9 +40,12 @@ const ActionColumn = ({ row }) => {
 }
 
 
-const UserTable = ({userData}) => {
+const UserTable = ({ userData, getListUsers, querySize }) => {
 
     const tableRef = useRef(null)
+    const [isOpenModal, setIsOpenModal] = useState(false)
+    const [userName, setUserName] = useState(null)
+    
 
     const columns = useMemo(
         () => [
@@ -59,7 +69,7 @@ const UserTable = ({userData}) => {
             {
                 header: '',
                 id: 'action',
-                cell: (props) => <ActionColumn row={props.row.original} />,
+                cell: (props) => <ActionColumn row={props.row.original} setIsOpenModal={setIsOpenModal} setUserName={setUserName} />,
             },
         ],
         []
@@ -91,6 +101,7 @@ const UserTable = ({userData}) => {
                 onSelectChange={onSelectChange}
                 onSort={onSort}
             />
+            <ModalDeleteUser isOpenModal={isOpenModal} setIsOpenModal={setIsOpenModal} username={userName}/>
         </>
     )
 }

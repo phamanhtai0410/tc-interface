@@ -56,7 +56,7 @@ const FormList = () => {
                                     <div className="relative mb-[16px]" key={index}>
                                         <Field name={`forms.${index}.key`} placeholder="Enter key name" className="pl-[60px] pr-[24px] border-solid border-[1px] border-[#9A9FA5] outline-none h-[48px] w-full rounded-lg text-[14px] font-medium text-[#9A9FA5]" />
                                         <img onClick={() => { arrayHelpers.remove(index) }}
-                                            className="absolute top-0 left-0" src="/img/analytics/vertical/closeKey.png" />
+                                            className="cursor-pointer absolute top-0 left-0" src="/img/analytics/vertical/closeKey.png" />
                                     </div>
                                 ))}
 

@@ -13,8 +13,11 @@ export const AnalyticService = {
     getListMetadata: (params) =>{
         return axiosClient.get(`${route}/vertical`,params)
     },
-    run: (params) =>{
-        return axiosClient.post(`${route}/vertical`,params)
+    // run: (params) =>{
+    //     return axiosClient.post(`${route}/vertical`,params)
+    // },
+    run: (params) => {
+        return axiosClient.put(`${route}/vertical/default`, params)
     },
 
     update: (params) =>{
@@ -29,15 +32,20 @@ export const AnalyticService = {
         return axiosClient.post(`${routeRun}/${params._id}`)
     },
 
-    detailAnalitic: (params) => {
-        return axiosClient.get(`${route}/vertical/result`, params ) 
-    },
+    // detailAnalitic: (params) => {
+    //     return axiosClient.get(`${route}/vertical/result`, params ) 
+    // },
 
     exportAnalitic: (params) => {
         return axiosClient.get(`${route}/vertical/result/export`, params ) 
     },
 
     resultAnalitic: (params) => {
-        return axiosClient.get(`https://tc-api.esollabs.com/v1/tool/score`, params ) 
+        return axiosClient.get(`/score`, params ) 
     },
+
+    // fetch analytic new flow
+    getAnalyticsVertical: (params) => { 
+        return axiosClient.get(`${route}/vertical/default`, params)
+    }
 }

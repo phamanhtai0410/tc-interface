@@ -6,8 +6,10 @@ import { useNavigate } from 'react-router-dom'
 import { removeFollower } from 'actions/follower.actions'
 import { setEditFollower } from 'store/follower/followerSlice'
 import { selectUserRole } from 'store/role/roleSlice'
+import Keywords from './Keywords'
+import PopupDelete from './PopupDelete'
 
-const ActionColumn = ({ row }) => {
+const ActionColumn = ({ row,setIsOpenModal,setGroupName }) => {
     const dispatch = useDispatch()
     const { textTheme } = useThemeClass()
     const navigate = useNavigate()
@@ -25,14 +27,16 @@ const ActionColumn = ({ row }) => {
             window.location.reload()
        }
     }
-
+    const handleOpenModal = ()=>{
+        setIsOpenModal(true)
+        setGroupName({
+            name:row.name,
+            id:row._id
+        })
+    }
     return (
-        <div className="flex justify-around w-[150px] ml-auto">
-            <span
-                className="text-[#0C72FA] text-[12px] font-medium cursor-pointer"
-            >
-                Detail
-            </span>
+        <div className="flex w-[150px] ml-auto gap-4">
+           
             
             {user?.roles?.length >= 1 && user?.roles?.[0] !== 'users' && <>
                 <span
@@ -43,7 +47,7 @@ const ActionColumn = ({ row }) => {
                 </span>
                 <span
                     className="text-[#F5222D] text-[12px] font-medium cursor-pointer"
-                    onClick={onDelete}
+                    onClick={handleOpenModal}
                 >
                     Remove
                 </span>
@@ -55,7 +59,7 @@ const ActionColumn = ({ row }) => {
 
 const AccountComponent = ({row}) => {
    
-    return <div className='w-[530px]'>
+    return <div className='w-[600px]'>
         {row.accounts.toString().replace('\n',',')}
     </div>
 }
@@ -70,8 +74,12 @@ const FollowerGroupNameComponent = ({ row }) => {
 }
 
 
-const FollowerKeyTable = ({followerData}) => {
-
+const FollowerKeyTable = ({followerData,fetchFollowerData}) => {
+    const [isOpenModal, setIsOpenModal] = useState(false)
+    const [groupName, setGroupName] = useState({
+        name:"",
+        id:""
+    })
     const tableRef = useRef(null)
     //load when component did mount
    
@@ -89,12 +97,17 @@ const FollowerKeyTable = ({followerData}) => {
             {
                 header: 'Follower Accounts',
                 accessorKey: 'accounts',
-                cell: (props) => <AccountComponent row={props.row.original} />
+                cell: (props) => {
+                    return(
+                        <Keywords keywords={props.row.original.accounts}/>
+                        // <AccountComponent row={props.row.original} />
+                    )
+                }
             },
             {
                 // header: 'Action',
                 id: 'action',
-                cell: (props) => <ActionColumn row={props.row.original} />,
+                cell: (props) => <ActionColumn row={props.row.original} setIsOpenModal={setIsOpenModal} setGroupName={setGroupName}/>,
             },
         ],
         []
@@ -123,6 +136,7 @@ const FollowerKeyTable = ({followerData}) => {
                 onSelectChange={onSelectChange}
                 onSort={onSort}
             />
+            <PopupDelete fetchFollowerData={fetchFollowerData} isOpenModal={isOpenModal} setIsOpenModal={setIsOpenModal} groupName={groupName}/>
         </>
     )
 }

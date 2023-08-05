@@ -46,20 +46,24 @@ const FollowerGroup = () => {
 
 
     return (
-        <AdaptableCard className="h-full py-[24px] px-[32px]" bodyClass="h-full">
-            <h3 className="mb-4 lg:mb-0">Follower Group</h3>
-            <div className='my-[48px]'>
-                {/* {user?.roles?.length >= 1 && user?.roles?.[0] !== 'users' && <FormFollowerGroup fetchFollowerData={fetchFollowerData} />} */}
-                {checkRoles(user?.roles) && <FormFollowerGroup fetchFollowerData={fetchFollowerData} />}
+        <div className="h-full" bodyClass="h-full">
+            <div className='bg-[#fff] mb-[32px] py-[24px] px-[32px] rounded-lg shadow-[0_4px_20px_0_rgba(0,0,0,0.03)]'>
+                <h3 className="mb-4 lg:mb-0">Follower Group</h3>
+                <div className='my-[48px]'>
+                    {/* {user?.roles?.length >= 1 && user?.roles?.[0] !== 'users' && <FormFollowerGroup fetchFollowerData={fetchFollowerData} />} */}
+                    {checkRoles(user?.roles) && <FormFollowerGroup fetchFollowerData={fetchFollowerData} />}
+                </div>
+            </div>
+            
+            <div className='bg-[#fff] shadow-[0_4px_20px_0_rgba(0,0,0,0.03)]'>
+                <FollowerKeyTable followerData={followerData} fetchFollowerData={fetchFollowerData}/>
             </div>
 
-            <FollowerKeyTable followerData={followerData}/>
-
-            <div className='flex justify-center mt-[32px]'>
+            {/* <div className='flex justify-center mt-[32px]'>
                 <Pagination currentPage={querySize.page} total={numPages} setQuerySize={setQuerySize}/>
-            </div>
+            </div> */}
 
-        </AdaptableCard>
+        </div>
     )
 }
 

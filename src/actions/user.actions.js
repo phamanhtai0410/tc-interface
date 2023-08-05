@@ -55,6 +55,18 @@ export const updateUserPassword = createAsyncThunk(
     }
   );
 
+export const deleteUser = createAsyncThunk(
+  "user/deleteUser",
+  async (params, { dispatch, getState, rejectWithValue }) => {
+    try {
+      const response = await UserService.deleteUser(params)
+      return response
+    } catch (err) {
+      return rejectWithValue(err)
+    }
+  }
+)
+  //
 export const getListFollowerWatch = createAsyncThunk(
   "user/getListFollowerWatch",
   async (params, { dispatch, getState, rejectWithValue }) => {
@@ -62,6 +74,39 @@ export const getListFollowerWatch = createAsyncThunk(
       const response = await UserService.followerWatch({ params })
       return response;
     } catch (err) {
+      return rejectWithValue(err)
+    }
+  }
+)
+export const addFollowerWatchUser = createAsyncThunk(
+  "user/addFollowerWatchUser",
+  async(params, {dispatch, getState, rejectWithValue}) =>{
+    try{
+      const response = await UserService.addFollowerWatch(params)
+      return response
+    }catch(err){
+      return rejectWithValue(err)
+    }
+  }
+)
+export const deleteFollowerWatchUser = createAsyncThunk(
+  "user/deleteFollowerWatchUser",
+  async (params, {dispatch, getState, rejectWithValue}) =>{
+    try{
+      const response = await UserService.deleteFollowerWatch(params)
+      return response
+    }catch(err){
+      return rejectWithValue(err)
+    }
+  }
+)
+export const addTakeNote = createAsyncThunk(
+  "user/addTakeNote",
+  async (params,{dispatch,getState,rejectWithValue})=>{
+    try{
+      const response = await UserService.addTakeNote(params)
+      return response
+    }catch(err){
       return rejectWithValue(err)
     }
   }
